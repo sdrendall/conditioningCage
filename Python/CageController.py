@@ -154,6 +154,8 @@ class ConditioningControlClient(basic.LineReceiver):
                 commandString = commandString.format(**videoParams)
                 print(commandString)
                 sp.Popen(commandString, shell=True)
+                # Log Start Time
+                logEvent("startFC")
 
             elif command=="X":
                 # end Fear Conditioning
@@ -163,6 +165,9 @@ class ConditioningControlClient(basic.LineReceiver):
                 # commandString = "MP4Box -add {}.h264 {}.mp4; " \
                 #     "rm {}.h264".format(fileBaseName, fileBaseName, fileBaseName)
                 # sp.Popen(commandString, shell=True)
+                
+                # Log Stop Time
+                logEvent("stopFC")
 
             elif command=="V":
                 # run non-FC video streaming
@@ -175,6 +180,8 @@ class ConditioningControlClient(basic.LineReceiver):
                     "-b 3000000 -w 1280 -h 740 -o - | nc {vIP} {vPort}"
                 commandString = commandString.format(**videoParameters)
                 sp.Popen(commandString, shell=True)
+                # Log Video stream start -- Inaccurate!!
+                logEvent("startVid")
 
             elif command=="T":
                 # run timelapse
@@ -198,10 +205,15 @@ class ConditioningControlClient(basic.LineReceiver):
                 commandString = commandString.format(**timelapseParams)
                 print(commandString)
                 sp.Popen(commandString, shell=True)
+                # Log start time
+                logEvent("startTL " + "intervalLen " + str(timelapseParams['interval']))
+            
 
             elif command=="E":
                 # end timelapse
                 sp.Popen("killall raspistill", shell=True)
+                # Log time
+                logEvent("stopTL")
 
             if global_teensy and passCommandToTeensy:
                 global_teensy.sendLine(command)
@@ -255,10 +267,7 @@ class TeensyClient(basic.LineReceiver):
             print "no global_server"
         if line.startswith("LOG "):
             data = line[4:] # strip "LOG "
-            global logFile
-            dateString = datetime.datetime.now().isoformat(' ')[:19]
-            logFile.write("{} {}\n".format(dateString, line))
-            logFile.flush()
+            logEvent(data)
 
     def connectionLost(self, reason):
         print "connection to Teensy lost"
@@ -300,6 +309,18 @@ def openNewLogFile():
     dateString = "{:04}{:02}{:02}_{:02}{:02}".format(
                     dt.year, dt.month, dt.day, dt.hour, dt.minute)
     logFile = open(os.path.join(dir, "{}_{}.log".format(baseName, dateString)), "w")
+    
+ 
+# Function to log events
+def logEvent(line):
+	global logFile
+	if logFile:	
+		dateString = datetime.datetime.now().isoformat(' ')[:19]
+		logFile.write("{} {}\n".format(dateString, line))
+		logFile.flush()
+	else:
+		openNewLogFile()
+		logEvent(line)
 
 
 # this connects the protocol to a server runing on port 1025

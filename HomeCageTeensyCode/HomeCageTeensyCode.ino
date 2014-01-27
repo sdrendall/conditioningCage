@@ -63,8 +63,8 @@ void logData(String dataName, long dataValue) {
   Serial.print("LOG ");
   dataName.toCharArray(charBuffer, BUFF_LEN);
   Serial.print(charBuffer);
-  Serial.print(": ");
-  Serial.println(dataValue,DEC);
+  Serial.print(" ");
+  Serial.println(dataValue, DEC);
 }
 
 
@@ -85,7 +85,6 @@ struct Parameters {
   unsigned long int BlockDuration[MAX_BLOCKS]; // in ms
 };
 Parameters parameters;
-
 
 void initParams() {
   parameters.tempPeriod = 5000; // how often to check temperature (in ms)
