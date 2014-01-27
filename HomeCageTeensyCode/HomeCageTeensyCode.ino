@@ -38,7 +38,7 @@ boolean shockOn = false;
 // globals for nose poke
 boolean nosepokeOnStandby = true;
 unsigned long int nosepokeCount = 0;
-unsigned long int waterDeliveryCount = 0;
+//unsigned long int waterDeliveryCount = 0;
 unsigned long int solenoidClosingTime;
 boolean solenoidOpen = false;
 
@@ -190,7 +190,7 @@ void interpretInputString(String input) {
       case 'R':
         // reset nosepoke / water counts
         nosepokeCount = 0;
-        waterDeliveryCount = 0;
+        //waterDeliveryCount = 0;
         break;
       case 'S':
         // get cage state
@@ -198,7 +198,7 @@ void interpretInputString(String input) {
         logData("Tone", toneOn);
         logData("Shock", shockOn);
         logData("Nose", nosepokeCount);
-        logData("Water", waterDeliveryCount);
+        //logData("Water", waterDeliveryCount);
         logData("Temp",  checkTMP(TMP1_PIN));
         break;
       default:
@@ -391,7 +391,7 @@ void loop(){
     digitalWrite(SOLENOID_PIN, HIGH);
     debugOut("NOSE POKE TRIGGERED");
     logData(String("Nose"), nosepokeCount);
-    logData(String("Water"), waterDeliveryCount);
+    //logData(String("Water"), waterDeliveryCount);
   }
 
   // Close solenoid when interval is reached
