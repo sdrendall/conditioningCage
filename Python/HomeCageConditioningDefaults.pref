@@ -1,0 +1,18 @@
+{
+    "dispensationInterval": 100,
+    "fcDelay1": 8,
+    "fcDelay10": 0,
+    "fcDelay2": 30,
+    "fcDelay3": 30,
+    "fcDelay4": 30,
+    "fcDelay5": 30,
+    "fcDelay6": 0,
+    "fcDelay7": 0,
+    "fcDelay8": 0,
+    "fcDelay9": 0,
+    "fcToneFrequency": 6000,
+    "shockDuration": 1,
+    "targetTemp": 30,
+    "tempPeriod": 2,
+    "toneDuration": 3
+}
