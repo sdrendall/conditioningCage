@@ -1,4 +1,4 @@
-Official Code for the HMS Conditioning Cage project
+Official Code for the Conditioning Cage project
 Ofer Mazor - ofer_mazor@hms.harvard.edu
 Sam Rendall - sdrendall@gmail.com
 
