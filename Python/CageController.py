@@ -16,6 +16,7 @@ from twisted.internet import reactor, protocol
 from twisted.protocols import basic
 from twisted.internet.serialport import SerialPort
 
+# IP Addresses to search for server and to stream video to respectively
 IP_ADDR = "192.168.1.4" # HCC Laptop is 192.168.1.4
 IP_PORT = 1025
 IP_ADDR_VIDEO = "192.168.1.4" # HCC Laptop is 192.168.1.4
