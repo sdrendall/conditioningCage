@@ -175,15 +175,15 @@ class nannyCamControlClient(basic.LineReceiver):
             
             if command == "V":
             # stream video
-            piCam.startVideo()
+                piCam.startVideo()
             
             elif command == "T":
             # start timelapse
-            piCam.startTimelapse()
+                piCam.startTimelapse()
             
             elif command == "E":
             # end timelapse
-            piCam.stopTimelapse()
+                piCam.stopTimelapse()
             
         def connectionLost(self, reason):
             print "connection lost"
