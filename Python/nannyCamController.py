@@ -96,7 +96,7 @@ class rasPiCam(object):
         commandString = "raspistill -q 50 -w {width} -h {height} " \
             "-t {duration} -tl {interval} "\
             "-o ~/timelapse/{cageName}_{dateTime}_%05d.jpg;"
-        commandString = commandString.format(**timelapseParams)
+        commandString = commandString.format(**self.timelapseParams)
         # Add delay to raspistill call, if required
         if delay:
             delay = delay/1000
@@ -107,7 +107,7 @@ class rasPiCam(object):
         self.state = "timelapse"
         # Log start time
         # TODO: Fix logging w/ delay
-        logEvent("startTL intervalLen {} delay {}".format(timelapseParams['interval'], delay))
+        logEvent("startTL intervalLen {} delay {}".format(self.timelapseParams['interval'], delay))
     
     def stopTimelapse(self):
         # end timelapse
