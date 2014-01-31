@@ -263,6 +263,7 @@ def main():
     reactor.connectTCP(IP_ADDR, IP_PORT, f)
 
     openNewLogFile()
+    piCam.startTimelapse()
 
     reactor.run()
 
