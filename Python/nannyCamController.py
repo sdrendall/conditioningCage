@@ -128,7 +128,7 @@ current_parameters = {}
 
 class nannyCamControlClient(basic.LineReceiver):
     
-    cageName = socket.getHostName()
+    cageName = socket.gethostname()
     currentVideoFileName = ""
     
     # Send line function -- self explanatory    
