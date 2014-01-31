@@ -27,7 +27,7 @@ class PiCoordinationProtocol(basic.LineReceiver):
         self.factory.interface.removeCage(self.id)
 
     def lineReceived(self, line):
-        print "line received"
+        print "line received : {}".format(line)
         #self.factory.sendLineToAll("<{}> {}".format(self.transport.getHost(), line))
         self.parseLine(line)
 
