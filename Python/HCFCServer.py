@@ -22,6 +22,8 @@ class PiCoordinationProtocol(basic.LineReceiver):
 
     def connectionLost(self, reason):
         print "removed client"
+        try:
+            print reason
         self.factory.clients.remove(self)
         self.factory.interface.removeCage(self.id)
 
