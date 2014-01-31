@@ -144,7 +144,7 @@ class nannyCamControlClient(basic.LineReceiver):
         global_server = self
 
     # Runs when the client recieves a line from the server
-    def lineRecieved(self, line):
+    def lineReceived(self, line):
         # Print line to stdout -- for debugging
         print "Server:", line
         
