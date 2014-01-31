@@ -66,7 +66,7 @@ class rasPiCam(object):
         self.videoParams = {
         'duration': 60000,
         'targetIP': IP_ADDR_VIDEO,
-        'tagetPort': IP_PORT_VIDEO}
+        'targetPort': IP_PORT_VIDEO}
         self.state = "inactive"
         
     def startVideo(self):
