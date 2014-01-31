@@ -52,7 +52,7 @@ sys.stdout.flush()
 
 
 # ---- Camera Class -- To handle camera actions ---------------
-class rasPiCam(object)
+class rasPiCam(object):
     
     # Initialize defaults for timelapse and video calls
     # TODO: Allow for timelapse to run for an unbounded length of time
@@ -70,7 +70,7 @@ class rasPiCam(object)
         self.status = "inactive"
         
     def startVideo(self):
-        if self.state == "timelapse"
+        if self.state == "timelapse":
             # Stop current timelapse
             self.stopTimelapse()
             # Queue next timelapse 
