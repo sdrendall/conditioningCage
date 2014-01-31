@@ -117,7 +117,8 @@ class rasPiCam(object):
         # Log time
         logEvent("stopTL")
 
-
+# Initialize Camera
+piCam = rasPiCam()
 
 # ---- Main Client Class to Handle Communication w/ server ----
 # Not sure what this does yet
