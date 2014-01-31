@@ -159,7 +159,7 @@ class nannyCamControlClient(basic.LineReceiver):
             pVal = paramArray[1]
 
             # Store parameter locally:
-            current_parameters[pName] = pVa
+            current_parameters[pName] = pVal
             
             # Set Date if recieved
             if pName == "Date":
@@ -170,7 +170,7 @@ class nannyCamControlClient(basic.LineReceiver):
                 
         # Only valid syntax for a line are two : delimited values or a single character
         # Single characters correspond to commands w/o values
-        elif len(lin.strip()) == 1:
+        elif len(line.strip()) == 1:
             command = line.strip()
             
             if command == "V":
@@ -220,6 +220,28 @@ def logEvent(line):
 	else:
 		openNewLogFile()
 		logEvent(line)
+		
+# --- CageConnectionFactory Class --- Handles Connection w/ server
+# TODO: Read documentation to figure out how this works
+class nannyCamConnectionFactory(protocol.ClientFactory):
+    protocol = ConditioningControlClient
+    teensy = None
+
+    def clientConnectionFailed(self, connector, reason):
+        print "Connection failed!"
+        # reactor.stop()
+        self.reconnect()
+
+    def clientConnectionLost(self, connector, reason):
+        print "Connection lost!"
+        # reactor.stop()
+        self.reconnect()
+
+    def reconnect(self):
+        time.sleep(1)
+        print "Reconnecting..."
+        reactor.connectTCP(IP_ADDR, IP_PORT, self)
+
 
 
 # ---------------------- Main Fcn --------------------------
@@ -236,7 +258,7 @@ def main():
             nannyCamControlClient.cageName = cageName
 
     # setup connection to server
-    f = CageConnectionFactory()
+    f = nannyCamConnectionFactory()
     reactor.connectTCP(IP_ADDR, IP_PORT, f)
 
     openNewLogFile()
