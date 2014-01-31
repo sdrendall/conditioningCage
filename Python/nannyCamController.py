@@ -67,7 +67,7 @@ class rasPiCam(object):
         'duration': 60000,
         'targetIP': IP_ADDR_VIDEO,
         'tagetPort': IP_PORT_VIDEO}
-        self.status = "inactive"
+        self.state = "inactive"
         
     def startVideo(self):
         if self.state == "timelapse":
