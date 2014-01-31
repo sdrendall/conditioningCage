@@ -6,6 +6,9 @@ import subprocess as sp
 
 IP_PORT = 1025
 
+# Initialize current_parameters dict
+current_parameters = {}
+
 class PiCoordinationProtocol(basic.LineReceiver):
     nextID = 1
 
