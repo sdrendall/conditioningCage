@@ -224,7 +224,7 @@ def logEvent(line):
 # --- CageConnectionFactory Class --- Handles Connection w/ server
 # TODO: Read documentation to figure out how this works
 class nannyCamConnectionFactory(protocol.ClientFactory):
-    protocol = ConditioningControlClient
+    protocol = nannyCamControlClient
     teensy = None
 
     def clientConnectionFailed(self, connector, reason):
