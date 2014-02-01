@@ -108,7 +108,6 @@ class rasPiCam(object):
         # Log start time
         # TODO: Fix logging w/ delay
         logEvent("startTL intervalLen {} delay {}".format(self.timelapseParams['interval'], delay))
-    git
     def stopTimelapse(self):
         # end timelapse
         sp.Popen("killall raspistill", shell=True)
