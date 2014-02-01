@@ -19,9 +19,9 @@ from twisted.internet.serialport import SerialPort
 
 # TODO: Allow for multiple server locations
 # IP Addresses to search for server and to stream video to respectively
-IP_ADDR = "10.0.214.157" # HCC Laptop is 192.168.1.4
+IP_ADDR = "192.168.1.21" # HCC Laptop is 192.168.1.4
 IP_PORT = 1025
-IP_ADDR_VIDEO = "10.0.214.157" # HCC Laptop is 192.168.1.4
+IP_ADDR_VIDEO = "192.168.1.21" # HCC Laptop is 192.168.1.4
 IP_PORT_VIDEO = 5001
 
 # Determine IP address of controller
@@ -51,7 +51,7 @@ print("My IP: " + MY_IP)
 sys.stdout.flush()
 
 
-# ---- Camera Class -- To handle camera actions ---------------
+# ------ Camera Class ---- To handle camera actions -------------------
 class rasPiCam(object):
     
     # Initialize defaults for timelapse and video calls
@@ -108,7 +108,7 @@ class rasPiCam(object):
         # Log start time
         # TODO: Fix logging w/ delay
         logEvent("startTL intervalLen {} delay {}".format(self.timelapseParams['interval'], delay))
-    
+    git
     def stopTimelapse(self):
         # end timelapse
         sp.Popen("killall raspistill", shell=True)
