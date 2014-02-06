@@ -58,7 +58,7 @@ class rasPiCam(object):
     # TODO: Allow for timelapse to run for an unbounded length of time
     def __init__(self):
         self.timelapseParams = {
-        'interval': 45*1000,
+        'interval': 10000,
         'duration': 4*24*60*60*1000,
         'cageName': socket.gethostname(),
         'width': 854,
