@@ -36,7 +36,7 @@ echo "//research.files.med.harvard.edu/genetics/GrayLabPis /media/HMSGenetics ci
 
 # Set up Cron
 cat crontab.base > ~/.crontab.curr
-echo "@reboot nannyCamClient" >> ~/.crontab.curr
+echo "@reboot cageClient" >> ~/.crontab.curr
 crontab ~/.crontab.curr
 
 # Add rsa keys
