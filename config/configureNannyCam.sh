@@ -41,7 +41,15 @@ echo "//research.files.med.harvard.edu/genetics/GrayLabPis /media/HMSGenetics ci
 cat crontab.base > ~/.crontab.curr
 echo "@reboot nannyCamClient" >> ~/.crontab.curr
 crontab ~/.crontab.curr
-popd
+
+# Add rsa keys
+if [ ! -d "~/.ssh"]
+    then
+    mkdir ~/.ssh
+fi
+cat pupRsaKey_sam >> ~/.ssh/authorized_keys
+
+# ADD KEY TO MAC FOR FILESYNC!!!
 
 # Reboot
 sudo reboot
