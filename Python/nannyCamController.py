@@ -56,10 +56,11 @@ class rasPiCam(object):
     
     # Initialize defaults for timelapse and video calls
     # TODO: Allow for timelapse to run for an unbounded length of time
+    # EDITED DEFAULTS FOR DRY RUN!!
     def __init__(self):
         self.timelapseParams = {
-        'interval': 10000,
-        'duration': 4*24*60*60*1000,
+        'interval': 500,
+        'duration': 12*60*60*1000,
         'cageName': socket.gethostname(),
         'width': 854,
         'height': 480}
@@ -222,7 +223,6 @@ def logEvent(line):
 		logEvent(line)
 		
 # --- CageConnectionFactory Class --- Handles Connection w/ server
-# TODO: Read documentation to figure out how this works
 class nannyCamConnectionFactory(protocol.ClientFactory):
     protocol = nannyCamControlClient
     teensy = None

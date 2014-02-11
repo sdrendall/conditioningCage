@@ -2,28 +2,30 @@
 
 # Script to be called by rsync on HIM022B raspberry pis to sync timelapses to the fileserver
 
-macWorkstationIP=10.11.36.146
+#Some important names and places
+macWorkstationIP=10.200.12.141
 geneticsFS=/media/HMSGenetics
-imageDest=$geneticsFS/SamRendall/conditioningCage/incomingTimelapses/$HOSTNAME
-logDest=$geneticsFS/SamRendall/conditioningCage/incomingLogs/$HOSTNAME
-log=~./rsyncLog
+imageDest=$geneticsFS/incomingTimelapses/$HOSTNAME
+logDest=$geneticsFS/incomingLogs/$HOSTNAME
+log=~/.rsyncLog
 
+# Functions to sync images
 syncToMacThenServer() {
-    rsync -avz --log-file=$log ~/timelapse/ hccworkstation@$macWorkstationIP: ~/timelapses/$HOSTNAME
-    rsync -aqz --remove-source-files --log-file=$log ~/timelapse/ $imageDest
+    rsync -aqz --log-file=$log ~/timelapse/*.jpg hccworkstation@$macWorkstationIP:~/timelapses/$HOSTNAME
+    sudo rsync -aqz --remove-source-files --log-file=$log ~/timelapse/*.jpg $imageDest
 }
 
 syncToMacOnly() {
-    rsync -aqz --remove-source-files --log-file=$log rsync -aqz ~/timelapse/ hccworkstation@$macWorkstationIP: ~/timelapses/$HOSTNAME
+    rsync -aqz --remove-source-files --log-file=$log rsync -aqz ~/timelapse/*.jpg hccworkstation@$macWorkstationIP:~/timelapses/$HOSTNAME
 }
 
-# Fcn to sync files
+# Automation of sync commands, check appropriate directories
 syncImages() {
     # Check if FS is mounted (should be a better way)
-    if [ -d "$geneticsFS/SamRendall" ];
+    if [ -d "$geneticsFS/incomingTimelapses" ];
     then 
         # Check if target dir exists
-        if [ -d "$imageDest" ]
+        if [ -d "$imageDest" ];
         then
             # sync to mac first, delete after syncing to server
             syncToMacThenServer
@@ -40,11 +42,16 @@ syncImages() {
 
 # Sync logs to server
 syncLogs() {
-    rsync -avz --log-file=$log ~/logs/ $logDest
+    if [ ! -d "$logDest" ];
+    then
+        sudo mkdir $logDest
+    fi
+    sudo rsync -aqz --log-file=$log ~/logs/ $logDest
+}
 
 # Fcn to mount filesystem
 mountFS() {
-    if [ -d '/media/HMSGenetics/'];
+    if [ -d '/media/HMSGenetics/' ];
     then
         sudo mount /media/HMSGenetics/;
     else
@@ -62,4 +69,3 @@ mountFS
 syncImages
 syncLogs
 unmountFS
-
