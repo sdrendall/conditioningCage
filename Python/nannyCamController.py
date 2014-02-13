@@ -74,8 +74,11 @@ class rasPiCam(object):
         if self.state == "timelapse":
             # Stop current timelapse
             self.stopTimelapse()
+            ## ALLOW FOR KILL COMMAND TO RESOLVE -- FIX THIS SOON
+            time.sleep(3)
             # Queue next timelapse 
-            self.startTimelapse(self.videoParams['duration'] + 10000)
+            from twisted.internet import reactor
+            reactor.callLater(self.videoParams['duration'] + 10000, self.startTimelapse)
         # Start Video
         commandString = "raspivid -t {duration} -fps 30 -cfx 128:128 " \
                     "-b 3000000 -w 1280 -h 740 -o - | nc {targetIP} {targetPort}"
@@ -87,7 +90,7 @@ class rasPiCam(object):
         logEvent("startVid")
     
     # Fcn to start a timelapse -- delay arg is in milliseconds
-    def startTimelapse(self, delay=None):
+    def startTimelapse(self):
         # Get date and time, for naming purposes
         dt = datetime.datetime.now()
         self.timelapseParams['dateTime'] = \
@@ -98,10 +101,6 @@ class rasPiCam(object):
             "-t {duration} -tl {interval} "\
             "-o ~/timelapse/{cageName}_{dateTime}_%05d.jpg;"
         commandString = commandString.format(**self.timelapseParams)
-        # Add delay to raspistill call, if required
-        if delay:
-            delay = delay/1000
-            commandString = "sleep {}; ".format(delay) + commandString
         # Open timelapse subprocess
         sp.Popen(commandString, shell=True)
         # Change state
