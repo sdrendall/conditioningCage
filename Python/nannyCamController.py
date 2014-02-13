@@ -17,11 +17,10 @@ from twisted.internet import reactor, protocol
 from twisted.protocols import basic
 from twisted.internet.serialport import SerialPort
 
-# TODO: Allow for multiple server locations
 # IP Addresses to search for server and to stream video to respectively
-IP_ADDR = "10.200.13.60" # HCC Laptop is 192.168.1.4
+IP_ADDR = "ccws.med.harvard.edu" # HCC Laptop is 192.168.1.4
 IP_PORT = 1025
-IP_ADDR_VIDEO = "10.200.13.60" # HCC Laptop is 192.168.1.4
+IP_ADDR_VIDEO = "ccws.med.harvard.edu" # HCC Laptop is 192.168.1.4
 IP_PORT_VIDEO = 5001
 
 # Determine IP address of controller
@@ -80,7 +79,7 @@ class rasPiCam(object):
             from twisted.internet import reactor
             reactor.callLater(self.videoParams['duration'] + 10000, self.startTimelapse)
         # Start Video
-        commandString = "raspivid -t {duration} -fps 30 -cfx 128:128 " \
+        commandString = "raspivid -vf -t {duration} -fps 30 -cfx 128:128 " \
                     "-b 3000000 -w 1280 -h 740 -o - | nc {targetIP} {targetPort}"
         commandString = commandString.format(**self.videoParams)
         sp.Popen(commandString, shell=True)
@@ -97,7 +96,7 @@ class rasPiCam(object):
             "{:04}{:02}{:02}_{:02}{:02}".\
             format(dt.year, dt.month, dt.day, dt.hour, dt.minute)
         # Construct raspistill call from input parameters
-        commandString = "raspistill -q 50 -w {width} -h {height} " \
+        commandString = "raspistill -vf -q 50 -w {width} -h {height} " \
             "-t {duration} -tl {interval} "\
             "-o ~/timelapse/{cageName}_{dateTime}_%05d.jpg;"
         commandString = commandString.format(**self.timelapseParams)
@@ -107,7 +106,7 @@ class rasPiCam(object):
         self.state = "timelapse"
         # Log start time
         # TODO: Fix logging w/ delay
-        logEvent("startTL intervalLen {} delay {}".format(self.timelapseParams['interval'], delay))
+        logEvent("startTL intervalLen {}".format(self.timelapseParams['interval']))
     def stopTimelapse(self):
         # end timelapse
         sp.Popen("killall raspistill", shell=True)

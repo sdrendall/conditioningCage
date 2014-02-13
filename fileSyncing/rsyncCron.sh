@@ -3,7 +3,7 @@
 # Script to be called by rsync on HIM022B raspberry pis to sync timelapses to the fileserver
 
 #Some important names and places
-macWorkstationIP=10.200.12.141
+macWorkstationIP=10.117.33.13
 geneticsFS=/media/HMSGenetics
 imageDest=$geneticsFS/incomingTimelapses/$HOSTNAME
 logDest=$geneticsFS/incomingLogs/$HOSTNAME

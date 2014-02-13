@@ -1,0 +1,5 @@
+#! /bin/bash
+
+for ip in 4 {8..12}; 
+    do rsync -avz --perms /home/sam/Documents/grayLab/conditioningCage/code/ pi@10.117.33.$ip:~/code/conditioningCage;
+done
