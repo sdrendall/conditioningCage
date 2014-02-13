@@ -189,8 +189,8 @@ class ConditioningControlClient(basic.LineReceiver):
                 if not os.path.exists(dir):
                     os.mkdir(dir)
                 timelapseParams = {}
-                timelapseParams['interval'] = 45*1000
-                timelapseParams['duration'] = 4*24*60*60*1000
+                timelapseParams['interval'] = 10*1000
+                timelapseParams['duration'] = 7*24*60*60*1000
                 timelapseParams['cageName'] = socket.gethostname()
                 # possible width/heights: 1280x720; 854x480
                 timelapseParams['width'] = 854

@@ -58,7 +58,7 @@ class rasPiCam(object):
     # EDITED DEFAULTS FOR DRY RUN!!
     def __init__(self):
         self.timelapseParams = {
-        'interval': 10000,
+        'interval': 10*60*1000,
         'duration': 7*24*60*60*1000,
         'cageName': socket.gethostname(),
         'width': 854,
