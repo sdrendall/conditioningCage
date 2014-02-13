@@ -19,9 +19,9 @@ from twisted.internet.serialport import SerialPort
 
 # TODO: Allow for multiple server locations
 # IP Addresses to search for server and to stream video to respectively
-IP_ADDR = "10.200.12.141" # HCC Laptop is 192.168.1.4
+IP_ADDR = "10.200.13.60" # HCC Laptop is 192.168.1.4
 IP_PORT = 1025
-IP_ADDR_VIDEO = "10.200.12.141" # HCC Laptop is 192.168.1.4
+IP_ADDR_VIDEO = "10.200.13.60" # HCC Laptop is 192.168.1.4
 IP_PORT_VIDEO = 5001
 
 # Determine IP address of controller
