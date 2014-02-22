@@ -4,8 +4,8 @@
 # Update
 sudo apt-get update && sudo apt-get -y upgrade 
 
-# Install dig and nmap
-sudo apt-get -y install dnsutils nmap
+# Install dig, ntp and nmap
+sudo apt-get -y install dnsutils nmap ntp
  
 # Install python packages twisted picamera
 sudo apt-get -y install python-twisted python-picamera

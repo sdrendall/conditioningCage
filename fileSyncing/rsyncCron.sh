@@ -11,7 +11,7 @@ log=~/.rsyncLog
 
 # Functions to sync images
 syncToMacThenServer() {
-    rsync -aqz --log-file=$log ~/timelapse/*.jpg hccworkstation@$macWorkstationIP:~/timelapses/$HOSTNAME
+    rsync -aqz --log-file=$log ~/timelapse/*.jpg ccws@$macWorkstationIP:~/timelapses/$HOSTNAME
     sudo rsync -aqz --remove-source-files --log-file=$log ~/timelapse/*.jpg $imageDest
 }
 

@@ -18,9 +18,9 @@ from twisted.protocols import basic
 from twisted.internet.serialport import SerialPort
 
 # IP Addresses to search for server and to stream video to respectively
-IP_ADDR = "ccws.med.harvard.edu" # HCC Laptop is 192.168.1.4
+IP_ADDR = "10.117.33.13" # ccServer is 10.117.33.13
 IP_PORT = 1025
-IP_ADDR_VIDEO = "ccws.med.harvard.edu" # HCC Laptop is 192.168.1.4
+IP_ADDR_VIDEO = "10.117.33.13" # ccServer is 10.117.33.13
 IP_PORT_VIDEO = 5001
 
 # Determine IP address of controller
