@@ -36,8 +36,8 @@ fcParams.append(Parameter('Fear Tone Frequency (Hz)', 'fcToneFrequency', 6000))
 # fcParams['tmp2_active'] = 0
 
 fcDelays = [];
-fcDelays.append(Parameter('FC Delay 1', 'fcDelay1', 30))
-fcDelays.append(Parameter('FC Delay 2', 'fcDelay2', 30))
+fcDelays.append(Parameter('FC Delay 1', 'fcDelay1', 300))
+fcDelays.append(Parameter('FC Delay 2', 'fcDelay2', 45))
 fcDelays.append(Parameter('FC Delay 3', 'fcDelay3', 30))
 fcDelays.append(Parameter('FC Delay 4', 'fcDelay4', 30))
 fcDelays.append(Parameter('FC Delay 5', 'fcDelay5', 30))
@@ -46,8 +46,6 @@ fcDelays.append(Parameter('FC Delay 7', 'fcDelay7', 0))
 fcDelays.append(Parameter('FC Delay 8', 'fcDelay8', 0))
 fcDelays.append(Parameter('FC Delay 9', 'fcDelay9', 0))
 fcDelays.append(Parameter('FC Delay 10', 'fcDelay10', 0))
-
-
 
 
 
