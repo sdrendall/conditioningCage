@@ -1,7 +1,7 @@
 #! /bin/bash
 
-dumpPath="/home/sam/code/conditioningCage/fileSyncing"
-startPath="/home/sam/code/conditioningCage/fileSyncing/test"
+dumpPath="/Volumes/genetics/GrayLab/SamRendall/conditioningCage/timelapseArchive"
+startPath="/Volumes/genetics/GrayLabPis/incomingTimelapses"
 
 ensureDir() {
     if [ ! -d $1 ]
@@ -12,14 +12,15 @@ ensureDir() {
 
 relocateImages() {
     # Extract distinct timelapses
-    for dateAndTimeStamp in $(ls *.jpg | cut -d'_' -f2,3 | sort | uniq)
+    for dateAndTimeStamp in $(ls *00001.jpg | cut -d'_' -f2,3 | sort | uniq)
     do
         currDumpDir="$1/$dateAndTimeStamp"
-        ensureDir $currDumpDir 
-        rsync -avz *$dateAndTimeStamp* $currDumpDir
+        ensureDir $currDumpDir
+        find -name '*$dateAndTimeStamp*' -maxdepth 0 | xargs -P 8 -I % rsync -avz % $currDumpDir
     done
 }
 
+pushd $startPath
 for pi in *
 do
     if [ -d $pi ]
@@ -31,3 +32,4 @@ do
         popd
     fi
 done
+popd
