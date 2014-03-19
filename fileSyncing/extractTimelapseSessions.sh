@@ -16,7 +16,7 @@ relocateImages() {
     do
         currDumpDir="$1/$dateAndTimeStamp"
         ensureDir $currDumpDir
-        find -name '*$dateAndTimeStamp*' -maxdepth 0 | xargs -P 8 -I % rsync -avz % $currDumpDir
+        find -name "*$dateAndTimeStamp*" -maxdepth 0 -exec rsync -avz {} $currDumpDir
     done
 }
 
