@@ -1,7 +1,7 @@
 #! /bin/bash
 
-dumpPath="/Volumes/genetics/GrayLab/SamRendall/conditioningCage/timelapseArchive"
-startPath="/Volumes/genetics/GrayLabPis/incomingTimelapses"
+dumpPath="/media/HMSGenetics/GrayLab/SamRendall/conditioningCage/timelapseArchive"
+startPath="/media/HMSGenetics/GrayLabPis/incomingTimelapses"
 
 ensureDir() {
     if [ ! -d $1 ]
@@ -16,7 +16,7 @@ relocateImages() {
     do
         currDumpDir="$1/$dateAndTimeStamp"
         ensureDir $currDumpDir
-        find . -name "*$dateAndTimeStamp*" -maxdepth 0 -exec rsync -avz {} $currDumpDir;
+        find . -name "*$dateAndTimeStamp*" -type f -maxdepth 1 -print0 |  xargs -0 -P 8 /bin/rsync -avz {} $currDumpDir
     done
 }
 
