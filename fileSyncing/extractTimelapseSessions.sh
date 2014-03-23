@@ -12,9 +12,9 @@ ensureDir() {
 
 relocateImages() {
     # Extract distinct timelapses
-    for dateAndTimeStamp in $(ls *00001.jpg | cut -d'_' -f2,3 | sort | uniq)
+    for dateAndTimeStamp in $(ls *100.jpg | cut -d'_' -f2,3 | sort | uniq)
     do
-        currDumpDir="$1/$dateAndTimeStamp/"
+        currDumpDir="$2/$dateAndTimeStamp/"
         ensureDir $currDumpDir
         find . -maxdepth 1 -name "*$dateAndTimeStamp*" -type f -print0 |  xargs -0 -L 5000 -P 8 -I % /usr/bin/rsync -avz --remove-source-files % $currDumpDir
     done
@@ -28,7 +28,8 @@ do
         pushd $pi
         piDumpPath="$dumpPath/$pi"
         ensureDir $piDumpPath
-        relocateImages $piDumpPath
+        piTlDir="$startPath/$pi"
+        relocateImages $piTlDir $piDumpPath
         popd
     fi
 done
