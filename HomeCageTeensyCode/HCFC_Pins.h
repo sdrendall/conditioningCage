@@ -20,8 +20,3 @@ const int NOSEPOKE_PIN = 11;
 const int SHOCK_PIN = 12;
 const int BUTTON1_PIN = 23;
 const int BUTTON2_PIN = 22;
-
-
-
-
-
