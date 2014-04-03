@@ -47,20 +47,24 @@ except:
         pass
 print("My IP: " + MY_IP)
 sys.stdout.flush()
-if re.match(r"10.11.176",MY_IP):
+if re.match(r"10.119.",MY_IP):
     print("decided to connect to Ofer's machine!")
     sys.stdout.flush()
-    IP_ADDR = "10.11.176.190" # Ofer's machine is 10.11.176.190
-    IP_ADDR_VIDEO = "10.11.176.190" # Ofer's machine is 10.11.176.190
+    IP_ADDR = "10.119.88.15" # Ofer's machine is 10.119.88.15
+    IP_ADDR_VIDEO = "10.119.88.15" # Ofer's machine is 10.119.88.15
 
 
 TEENSY_BAUD = 9600
+TEENSY_DEV = None
 if sys.platform == "linux2":
-    TEENSY_DEV = glob.glob("/dev/serial/by-path/*usb*")[0]
+    devices = glob.glob("/dev/serial/by-path/*usb*")
+    if devices:
+        TEENSY_DEV = devices[0]
 # for debugging on a mac:
 elif sys.platform == "darwin":
     devices = glob.glob('/dev/tty.usb*')
-    TEENSY_DEV = devices[0]
+    if devices:
+        TEENSY_DEV = devices[0]
 
 global_teensy = None
 global_server = None
@@ -87,7 +91,7 @@ class ConditioningControlClient(basic.LineReceiver):
     def lineReceived(self, line):
         global global_teensy
         print "Server:", line
-        paramArray = line.split(":",1)
+        paramArray = line.split(":", 1)
 
         # Set Parameters
         if len(paramArray) > 1:
@@ -101,10 +105,13 @@ class ConditioningControlClient(basic.LineReceiver):
             sendToTeensy = True;
             if pName == "Date":
                 sendToTeensy = False
-                commandString = "sudo date -u {}".format(pVal)
-                sp.Popen(commandString,shell=True)
-                print "Setting date:"
-                print commandString
+                if sys.platform == "linux2":
+                    commandString = "sudo date -u {}".format(pVal)
+                    sp.Popen(commandString,shell=True)
+                    print "Setting date"
+                    # print commandString
+                else:
+                    print "Not setting date (not running on a RasPi)"
 
             # send parameter off to Teensy:
             if sendToTeensy and global_teensy:
@@ -165,7 +172,7 @@ class ConditioningControlClient(basic.LineReceiver):
                 # commandString = "MP4Box -add {}.h264 {}.mp4; " \
                 #     "rm {}.h264".format(fileBaseName, fileBaseName, fileBaseName)
                 # sp.Popen(commandString, shell=True)
-                
+
                 # Log Stop Time
                 logEvent("stopFC")
 
@@ -207,7 +214,7 @@ class ConditioningControlClient(basic.LineReceiver):
                 sp.Popen(commandString, shell=True)
                 # Log start time
                 logEvent("startTL " + "intervalLen " + str(timelapseParams['interval']))
-            
+
 
             elif command=="E":
                 # end timelapse
@@ -215,11 +222,19 @@ class ConditioningControlClient(basic.LineReceiver):
                 # Log time
                 logEvent("stopTL")
 
-            if global_teensy and passCommandToTeensy:
-                global_teensy.sendLine(command)
-                print "sending command to teensy: <{}>".format(command)
+            elif command=="S":
+                passCommandToTeensy = True;
+            elif command=="R":
+                passCommandToTeensy = True;
+
+            if passCommandToTeensy:
+                if global_teensy:
+                    global_teensy.sendLine(command)
+                    print "sending command to teensy: <{}>".format(command)
+                else:
+                    print "no global_teensy"
             else:
-                print "no global_teensy"
+                print "not passing command on to Teensy"
 
 
     def connectionLost(self, reason):
@@ -309,12 +324,12 @@ def openNewLogFile():
     dateString = "{:04}{:02}{:02}_{:02}{:02}".format(
                     dt.year, dt.month, dt.day, dt.hour, dt.minute)
     logFile = open(os.path.join(dir, "{}_{}.log".format(baseName, dateString)), "w")
-    
- 
+
+
 # Function to log events
 def logEvent(line):
 	global logFile
-	if logFile:	
+	if logFile:
 		dateString = datetime.datetime.now().isoformat(' ')[:19]
 		logFile.write("{} {}\n".format(dateString, line))
 		logFile.flush()
@@ -341,13 +356,13 @@ def main():
     reactor.connectTCP(IP_ADDR, IP_PORT, f)
 
     # setup connection to teensy
-    f2 = TeensyConnectionFactory()
-    f2.conditioningClientFactory = f;
-    protocol = f2.buildProtocol(None)
-    deviceName = TEENSY_DEV
-    port = SerialPort(protocol, deviceName, reactor)
-
-    f.teensyFactory = f2
+    if TEENSY_DEV:
+        f2 = TeensyConnectionFactory()
+        f2.conditioningClientFactory = f;
+        protocol = f2.buildProtocol(None)
+        deviceName = TEENSY_DEV
+        port = SerialPort(protocol, deviceName, reactor)
+        # f.teensyFactory = f2
 
     openNewLogFile()
 

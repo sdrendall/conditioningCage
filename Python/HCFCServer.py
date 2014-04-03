@@ -125,6 +125,19 @@ class PiCoordinationFactory(protocol.Factory):
         else:
             self.sendLineToAll(cmd)
 
+    def getCageState(self, cageId=None):
+        cmd = "S"
+        if cageId:
+            self.sendLineToOne(cageId, cmd)
+        else:
+            self.sendLineToAll(cmd)
+
+    def resetNosePoke(self, cageId=None):
+        cmd = "R"
+        if cageId:
+            self.sendLineToOne(cageId, cmd)
+        else:
+            self.sendLineToAll(cmd)
 
 ## For Testing/Debug purposes below:
 
