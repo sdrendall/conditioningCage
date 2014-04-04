@@ -49,11 +49,11 @@ fcDelays.append(Parameter('FC Delay 10', 'fcDelay10', 0))
 
 
 
-
-
 class HCFHControllerWindow(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
+
+        self.cageWindows = {}
 
         self.mainSizer = wx.BoxSizer(wx.VERTICAL)
 
@@ -65,6 +65,8 @@ class HCFHControllerWindow(wx.Panel):
         self.clientListSizer = wx.StaticBoxSizer(self.clientListBox,wx.VERTICAL)
         self.clientList = wx.ListBox(self, -1, name="Cage List")
         self.clientListSizer.Add(self.clientList, 1, wx.EXPAND)
+
+        self.Bind(wx.EVT_LISTBOX_DCLICK, self.newCageWindow)
 
         self.topSizer.Add(self.clientListSizer, 1, wx.EXPAND | wx.ALL, SECTION_BORDER_WIDTH)
 
@@ -138,6 +140,14 @@ class HCFHControllerWindow(wx.Panel):
         self.commandEndTimelapse.SetBackgroundColour(wx.RED)
         self.commandListSizer.Add(self.commandEndTimelapse, 0, wx.ALL, BUTTON_BORDER)
 
+        self.commandResetOneNosepoke = wx.Button(self, -1, "Reset Nosepoke Count in Selected Cage")
+        self.commandResetOneNosepoke.Bind(wx.EVT_BUTTON, self.resetOneNosepoke)
+        self.commandListSizer.Add(self.commandResetOneNosepoke, 0, wx.ALL, BUTTON_BORDER)
+
+        self.commandResetNosepoke = wx.Button(self, -1, "Reset Nosepoke Count in All Cages")
+        self.commandResetNosepoke.Bind(wx.EVT_BUTTON, self.resetNosepoke)
+        self.commandListSizer.Add(self.commandResetNosepoke, 0, wx.ALL, BUTTON_BORDER)
+
         self.topSizer.Add(self.commandListSizer, 1, 0 | wx.TOP | wx.BOTTOM, SECTION_BORDER_WIDTH)
 
         # FC Parameters
@@ -197,11 +207,30 @@ class HCFHControllerWindow(wx.Panel):
 
     def addCage(self, cageID, cageName):
         self.clientList.Append(cageName, cageID)
+        self.cageWindows[cageID] = CageWindow(self, cageID, cageName, self.cageWindows)
+        self.server.getCageState(cageID)
+
+    def newCageWindow(self, event):
+        n = self.clientList.GetSelection()
+        cageName = self.clientList.GetStringSelection()
+        if n == wx.NOT_FOUND:
+            # should never get here
+            self.displayText("bad double-click")
+        else:
+            cageID = self.clientList.GetClientData(n)
+            if cageID in self.cageWindows:
+                win = self.cageWindows[cageID]
+                win.Raise()
+            else:
+                self.cageWindows[cageID] = CageWindow(self, cageID, cageName, self.cageWindows)
+                self.server.getCageState(cageID)
 
     def removeCage(self, cageID):
         for n in xrange(self.clientList.GetCount()):
             if cageID == self.clientList.GetClientData(n):
                 self.clientList.Delete(n)
+        self.cageWindows[cageID].Destroy()
+        del self.cageWindows[cageID]
 
     def runFCAllCages(self, e):
         """Send FC paramaters to cages, then run FC."""
@@ -252,6 +281,17 @@ class HCFHControllerWindow(wx.Panel):
         else:
             id = self.clientList.GetClientData(n)
             self.server.endTimelapse(id)
+
+    def resetNosepoke(self, e):
+        self.server.resetNosePoke()
+
+    def resetOneNosepoke(self, e):
+        n = self.clientList.GetSelection()
+        if n == wx.NOT_FOUND:
+            self.displayText("Reset Nosepoke: No cage selected.")
+        else:
+            id = self.clientList.GetClientData(n)
+            self.server.resetNosePoke(id)
 
     def uploadParamsAllCagesEvent(self, e):
         self.uploadParams()
@@ -350,6 +390,110 @@ class HCFHControllerWindow(wx.Panel):
 
     def displayText(self, text):
         self.debugText.AppendText(text + "\n")
+
+    def setState(self, cageID, sName, sVal):
+        if cageID in self.cageWindows:
+                win = self.cageWindows[cageID]
+                win.setState(sName, sVal)
+
+
+class CageWindow(wx.Frame):
+    def __init__(self, parent, cageID, cageName, windowList):
+        wx.Frame.__init__(self, parent, name=cageName)
+
+        self.cageID = cageID
+        self.cageName = cageName
+        self.windowList = windowList
+
+        # self.pnl = wx.Panel(self)
+        self.pnl = self
+
+        # self.mainSizer = wx.BoxSizer(wx.VERTICAL)
+        self.mainSizer = wx.FlexGridSizer(rows=6, cols=2, vgap=10, hgap=5)
+
+        self.fcRunning = wx.StaticText(self.pnl, label="", style=wx.ALIGN_CENTRE)
+        self.fcRunningPrefix = wx.StaticText(self.pnl, label="Fear Conditioning:")
+        self.shock = wx.StaticText(self.pnl, label="", style=wx.ALIGN_CENTRE)
+        self.shockPrefix = wx.StaticText(self.pnl, label="Shock:")
+        self.tone = wx.StaticText(self.pnl, label="", style=wx.ALIGN_CENTRE)
+        self.tonePrefix = wx.StaticText(self.pnl, label="Tone:")
+        self.noseCount = wx.StaticText(self.pnl, label="", style=wx.ALIGN_CENTRE)
+        self.noseCountPrefix = wx.StaticText(self.pnl, label="Nose pokes:")
+        self.waterCount = wx.StaticText(self.pnl, label="", style=wx.ALIGN_CENTRE)
+        self.waterCountPrefix = wx.StaticText(self.pnl, label="Water deliveries:")
+        self.temp = wx.StaticText(self.pnl, label="", style=wx.ALIGN_CENTRE)
+        self.tempPrefix = wx.StaticText(self.pnl, label="Temperature:")
+
+        self.mainSizer.AddMany([
+            (self.fcRunningPrefix, 0, wx.ALIGN_RIGHT | wx.ALIGN_BOTTOM | wx.LEFT | wx.TOP, 10),
+            (self.fcRunning, 0, wx.EXPAND | wx.ALIGN_LEFT | wx.ALIGN_BOTTOM |wx.TOP, 10),
+            (self.shockPrefix, 0, wx.ALIGN_RIGHT),
+            (self.shock, 0, wx.EXPAND | wx.ALIGN_LEFT),
+            (self.tonePrefix, 0, wx.ALIGN_RIGHT),
+            (self.tone, 0, wx.EXPAND | wx.ALIGN_LEFT),
+            (self.noseCountPrefix, 0, wx.ALIGN_RIGHT),
+            (self.noseCount, 0, wx.EXPAND | wx.ALIGN_LEFT),
+            (self.waterCountPrefix, 0, wx.ALIGN_RIGHT),
+            (self.waterCount, 0, wx.EXPAND | wx.ALIGN_LEFT),
+            (self.tempPrefix, 0, wx.ALIGN_RIGHT),
+            (self.temp, 0, wx.EXPAND | wx.ALIGN_LEFT)
+            ])
+
+        #Layout sizers
+        self.SetSizer(self.mainSizer)
+        self.SetAutoLayout(1)
+        self.mainSizer.Fit(self.pnl)
+
+        self.Bind(wx.EVT_CLOSE, self.OnCloseWindow)
+
+        self.SetSize((360, 300))
+        self.SetTitle(self.cageName)
+        self.Centre()
+        self.Show(True)
+
+        self.Refresh()
+
+
+    def OnCloseWindow(self, event):
+        # print self.windowList
+        # print self.cageID
+        del self.windowList[self.cageID]
+        self.Destroy()
+
+
+    def setState(self, sName, sVal):
+        # print "HERE *****  <{}> <{}>".format(sName, sVal)
+        if sName == "FC":
+            if sVal == "0":
+                self.fcRunning.SetLabel("OFF")
+                self.fcRunning.SetForegroundColour(wx.BLACK)
+            else:
+                self.fcRunning.SetLabel("Block " + sVal)
+                self.fcRunning.SetForegroundColour(wx.BLUE)
+        elif (sName == "Shock") or (sName == "Tone"):
+            if sName == "Shock":
+                label = self.shock
+            else:
+                label = self.tone
+            if sVal == "0":
+                label.SetLabel("OFF")
+                label.SetForegroundColour(wx.BLACK)
+                label.SetBackgroundColour((0,0,0,0))
+            else:
+                label.SetLabel("ON")
+                label.SetForegroundColour(wx.BLACK)
+                label.SetBackgroundColour(wx.RED)
+        elif (sName == "Nose"):
+            self.noseCount.SetLabel(sVal)
+        elif (sName == "Water"):
+            self.waterCount.SetLabel(sVal)
+        elif (sName == "Temp"):
+            self.temp.SetLabel(sVal + "° C")
+
+        # self.mainSizer.RecalcSizes()
+
+
+####################################
 
 class NullServer():
     def runVideo(self,id):
