@@ -25,7 +25,7 @@ class Parameter(object):
 fcParams = [];
 
 fcParams.append(Parameter('Temperature Check Interval (sec)', 'tempPeriod', 2))
-fcParams.append(Parameter('Tone Duration (sec)', 'toneDuration', 2))
+fcParams.append(Parameter('Tone Duration (sec)', 'toneDuration', 10))
 fcParams.append(Parameter('Shock Duration (sec)', 'shockDuration', 1))
 fcParams.append(Parameter('Target Temperature (°C)', 'targetTemp', 30))
 fcParams.append(Parameter('Water delivery valve open time (ms)', 'dispensationInterval', 100))
@@ -36,13 +36,13 @@ fcParams.append(Parameter('Fear Tone Frequency (Hz)', 'fcToneFrequency', 6000))
 # fcParams['tmp2_active'] = 0
 
 fcDelays = [];
-fcDelays.append(Parameter('FC Delay 1', 'fcDelay1', 30))
-fcDelays.append(Parameter('FC Delay 2', 'fcDelay2', 30))
-fcDelays.append(Parameter('FC Delay 3', 'fcDelay3', 30))
-fcDelays.append(Parameter('FC Delay 4', 'fcDelay4', 30))
+fcDelays.append(Parameter('FC Delay 1', 'fcDelay1', 310))
+fcDelays.append(Parameter('FC Delay 2', 'fcDelay2', 70))
+fcDelays.append(Parameter('FC Delay 3', 'fcDelay3', 70))
+fcDelays.append(Parameter('FC Delay 4', 'fcDelay4', 190))
 fcDelays.append(Parameter('FC Delay 5', 'fcDelay5', 30))
-fcDelays.append(Parameter('FC Delay 6', 'fcDelay6', 0))
-fcDelays.append(Parameter('FC Delay 7', 'fcDelay7', 0))
+fcDelays.append(Parameter('FC Delay 6', 'fcDelay6', 130))
+fcDelays.append(Parameter('FC Delay 7', 'fcDelay7', 190))
 fcDelays.append(Parameter('FC Delay 8', 'fcDelay8', 0))
 fcDelays.append(Parameter('FC Delay 9', 'fcDelay9', 0))
 fcDelays.append(Parameter('FC Delay 10', 'fcDelay10', 0))
