@@ -175,3 +175,8 @@ def generateTimestamp():
     now = dt.datetime.now()
     return "{:04}{:02}{:02}_{:02}{:02}".format(
         now.year, now.month, now.day, now.hour, now.minute)
+
+def mergeDicts(d1, d2):
+    d = d1.copy()
+    for key, value in d2:
+        d[key] = value
