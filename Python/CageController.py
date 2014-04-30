@@ -11,6 +11,7 @@ import sys, re, time, datetime, os
 import glob
 import socket
 import subprocess as sp
+import cameraControls
 
 from twisted.internet import reactor, protocol
 from twisted.protocols import basic
@@ -21,6 +22,10 @@ IP_ADDR = "10.117.33.13" # ccServer is 10.117.33.13
 IP_PORT = 1025
 IP_ADDR_VIDEO = "10.117.33.13" # ccServer is 10.117.33.13
 IP_PORT_VIDEO = 5001
+
+# Create a camera object to be used by the raspberry pi
+# Uses this module's logEvent function to log 
+camera = cameraControls.Camera(logFcn=logEvent)
 
 # Determine IP address of controller
 # (for deubgging, connect to Ofer's machine if on Warren Alpert subnet)
@@ -75,7 +80,6 @@ current_parameters = {}
 class ConditioningControlClient(basic.LineReceiver):
 
     cageName = socket.gethostname()
-    currentVideoFileName = ""
 
     def sendLine(self, line):
         "send line to stdout before transmitting, for debugging"
@@ -136,42 +140,32 @@ class ConditioningControlClient(basic.LineReceiver):
                 except:
                     delayTimes = [300000]
                     print("Couldn't compute delay times. Defaulting to 5 minutes.")
+
                 fcDuration = sum(delayTimes) + 5*60*1000 # add extra five minutes after last shock
-                dir = os.path.expanduser("~/fc_videos/")
-                if not os.path.exists(dir):
-                    os.mkdir(dir)
-                videoParams = {}
-                videoParams['duration'] = fcDuration
-                videoParams['cageName'] = socket.gethostname()
-                # possible width/heights: 1920x1080; 1280x720; 854x480
-                videoParams['width'] = 854
-                videoParams['height'] = 480
-                videoParams['bitrate'] = 1000000
-                dt = datetime.datetime.now()
-                videoParams['dateTime'] = "{:04}{:02}{:02}_{:02}{:02}".format(
-                    dt.year, dt.month, dt.day, dt.hour, dt.minute)
-                videoBaseName = "~/fc_videos/{cageName}_FC_{dateTime}".format(**videoParams)
-                videoParams['fileBase'] = videoBaseName
-                self.currentVideoFileName = videoBaseName
-                commandString = "raspivid -w {width} -h {height} " \
-                    "-n -b {bitrate} -fps 30 -cfx 128:128 " \
-                    "-t {duration} -o {fileBase}.h264; " \
-                    "(MP4Box -add {fileBase}.h264 {fileBase}.mp4 -fps 30 && " \
-                    "rm {fileBase}.h264)"
-                commandString = commandString.format(**videoParams)
-                print(commandString)
-                sp.Popen(commandString, shell=True)
-                # Log Start Time
-                logEvent("startFC")
+                savePath = os.path.expanduser("~/fc_videos/")
+                if not os.path.exists(savePath):
+                    os.mkdir(savePath)
+
+                # Compile parameters
+                videoParams = {
+                    'duration': fcDuration,
+                    'cageName': socket.gethostname(),
+                    # possible width/heights: 1920x1080; 1280x720; 854x480
+                    'width': 854,
+                    'height': 480,
+                    'bitrate': 1000000,
+                    'dateTime': generateTimestamp(),
+                }
+                videoParams['outputPath'] =  savePath + "/{cageName}_FC_{dateTime}".format(**videoParams)
+
+                # Start a video
+                camera.startVideo(videoParams)
+                
 
             elif command=="X":
                 # end Fear Conditioning
                 passCommandToTeensy = True
-                sp.Popen("killall raspivid", shell=True)
-                # fileBaseName = self.currentVideoFileName
-                # commandString = "MP4Box -add {}.h264 {}.mp4; " \
-                #     "rm {}.h264".format(fileBaseName, fileBaseName, fileBaseName)
-                # sp.Popen(commandString, shell=True)
+                camera.stopVideo()
 
                 # Log Stop Time
                 logEvent("stopFC")
@@ -179,48 +173,28 @@ class ConditioningControlClient(basic.LineReceiver):
             elif command=="V":
                 # run non-FC video streaming
                 global current_parameters
-                videoParameters = {}
-                videoParameters["vTime"] = 60000 # TODO make this a user parameter
-                videoParameters["vIP"] = IP_ADDR_VIDEO
-                videoParameters["vPort"] = IP_PORT_VIDEO
-                commandString = "raspivid -t {vTime} -fps 30 -cfx 128:128 " \
-                    "-b 3000000 -w 1280 -h 740 -o - | nc {vIP} {vPort}"
-                commandString = commandString.format(**videoParameters)
-                sp.Popen(commandString, shell=True)
-                # Log Video stream start -- Inaccurate!!
-                logEvent("startVid")
+                videoParameters = {
+                "streamTo": IP_ADDR_VIDEO,
+                "streamPort": IP_PORT_VIDEO,
+                'stream': True
+                }
+                camera.startVideo(videoParameters)
 
             elif command=="T":
                 # run timelapse
-                dir = os.path.expanduser("~/timelapse/")
-                if not os.path.exists(dir):
-                    os.mkdir(dir)
-                timelapseParams = {}
-                timelapseParams['interval'] = 10*1000
-                timelapseParams['duration'] = 7*24*60*60*1000
-                timelapseParams['cageName'] = socket.gethostname()
-                # possible width/heights: 1280x720; 854x480
-                timelapseParams['width'] = 854
-                timelapseParams['height'] = 480
-                dt = datetime.datetime.now()
-                timelapseParams['dateTime'] = \
-                    "{:04}{:02}{:02}_{:02}{:02}".format(
-                        dt.year, dt.month, dt.day, dt.hour, dt.minute)
-                commandString = "raspistill -q 50 -w {width} -h {height} " \
-                    "-t {duration} -tl {interval} "\
-                    "-o ~/timelapse/{cageName}_{dateTime}_%05d.jpg"
-                commandString = commandString.format(**timelapseParams)
-                print(commandString)
-                sp.Popen(commandString, shell=True)
-                # Log start time
-                logEvent("startTL " + "intervalLen " + str(timelapseParams['interval']))
+                savePath = os.path.expanduser("~/timelapse/")
+                if not os.path.exists(savePath):
+                    os.mkdir(savePath)
+
+                timelapseParams = {
+                'cageName': socket.gethostname(),
+                'dateTime': generateTimestamp()
+                }
+                camera.startTimelapse(timelapseParams)
 
 
             elif command=="E":
-                # end timelapse
-                sp.Popen("killall raspistill", shell=True)
-                # Log time
-                logEvent("stopTL")
+                camera.stopTimelapse()
 
             elif command=="S":
                 passCommandToTeensy = True;
@@ -328,14 +302,20 @@ def openNewLogFile():
 
 # Function to log events
 def logEvent(line):
-	global logFile
-	if logFile:
-		dateString = datetime.datetime.now().isoformat(' ')[:19]
-		logFile.write("{} {}\n".format(dateString, line))
-		logFile.flush()
-	else:
-		openNewLogFile()
-		logEvent(line)
+    global logFile:
+    if not logFile:
+        openLogFile()
+    logFile.write('{} {}\n'.format(generateDateString(), line))
+    logFile.flush()
+
+
+def generateDateString():
+    return datetime.datetime.now().isoformat(' ')[:19]
+
+def generateTimestamp():
+    now = datetime.datetime.now()
+    return "{:04}{:02}{:02}_{:02}{:02}".format(
+        now.year, now.month, now.day, now.hour, now.minute)
 
 
 # this connects the protocol to a server runing on port 1025
