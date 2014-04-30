@@ -1,5 +1,6 @@
 #! /bin/bash
 
-for ip in 4 {8..12}; 
-    do rsync -avz --perms /home/sam/Documents/grayLab/conditioningCage/code/ pi@10.117.33.$ip:~/code/conditioningCage;
+for host in $(nmap -sP 10.117.33.* | egrep 'graylabpi[1-8]' | cut -d ' ' -f 5); 
+    # deprecated rsync version : do rsync -avz --perms /home/sam/Documents/grayLab/conditioningCage/code/ pi@10.117.33.$ip:~/code/conditioningCage;
+    do ssh pi@$host 'cd ~/code/conditioningCage; git pull origin master'
 done
