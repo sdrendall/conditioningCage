@@ -30,11 +30,11 @@ class Camera(object):
             'outputPath': None 
     }
 
-    def __init__(self, logFcn=logEvent):
+    def __init__(self, logger=Logger()):
         self.activeTimelapse = None
         self.activeVideo = None
-        # Set log function
-        self.log = logFcn
+        # Set logger object
+        self.logger = logger
 
 
     def startVideo(self, params):
@@ -52,7 +52,7 @@ class Camera(object):
         # Send command
         sendVideoCommand(vidParams)
         # Write to log
-        self.log('startVid')
+        self.logger.writeToLog('startVid')
         # Store start time
         vidParams['startTime'] = dt.datetime.now()
         # Store vid parameters
@@ -70,7 +70,7 @@ class Camera(object):
         # Send command
         sentTimelapseCommand(tlParams)
         # Write to log
-        self.log(formatLogString('startTL','intervalLen',tlParams['interval'],'timestamp',tlParams['timestamp']))
+        self.logger.writeToLog(formatLogString('startTL','intervalLen',tlParams['interval'],'timestamp',tlParams['timestamp']))
         # Store start time
         tlParams['startTime'] = dt.datetime.now()
         # Store TL parameters
@@ -82,7 +82,7 @@ class Camera(object):
         # Kill video processes
         sp.Popen('killall raspivid', shell=True)
         # Log
-        self.log("stopTL")
+        self.logger.writeToLog("stopTL")
 
     def queueTimelapse(self, params, delay):
         # Schedule Timelapse
@@ -95,7 +95,7 @@ class Camera(object):
         # Kill timelapse processes
         sp.Popen("killall raspistill", shell=True)
         # Log
-        self.log('stopVid')
+        self.logger.writeToLog('stopVid')
 
 
 class CameraState(dict):
@@ -112,6 +112,39 @@ class Timelapse(CameraState):
 
 class Video(CameraState):
     pass
+
+
+class Logger(object):
+    # An object to handle logging
+    # Used to write to log files
+
+    def __init__(self):
+        self.logFile = None
+        self.logDir = None
+        self.ensureLogPath()
+        self.openNewLogFile()
+
+    def ensureLogPath(self):
+        self.logDir = os.path.expanduser("~/logs/")
+        if not os.path.exists(self.logDir):
+            os.mkdir(self.logDir)
+
+    def openNewLogFile(self):
+        if self.logFile:
+            if not self.logFile.closed
+                logFile.close()
+        filename = "cameraLog_" + generateTimestamp() + '.log'
+        self.logFile = open(os.path.join(self.logDir, filename), "w")
+
+    def closeLogFile(self):
+        self.logFile.close()
+        
+    # Function to log events
+    def writeToLog(self, line):
+        if not self.logFile:
+            self.openLogFile()
+        self.logFile.write('{} {}\n'.format(generateDateString(), line))
+        self.logFile.flush()
 
 
 def sendTimelapseCommand(p):
@@ -146,26 +179,6 @@ def formatLogString(*words):
     for word in words:
         logStr += "{} ".format(word)
     return logStr
-
-
-def logEvent(line):
-    global logFile:
-    if not logFile:
-        openLogFile()
-    logFile.write('{} {}\n'.format(generateDateString(), line))
-    logFile.flush()
-
-
-def openLogFile():
-    global logFile
-    if logFile:
-        return
-    filename = "cameraLog_" + generateTimestamp() + '.log'
-    baseDir = os.path.expanduser('~/logs')
-    if not os.path.exists(baseDir):
-        os.mkdir(baseDir)
-    logFile = open(os.path.join(baseDir, filename), 'w')
-
 
 def generateDateString():
     return dt.datetime.now().isoformat(' ')[:19]
