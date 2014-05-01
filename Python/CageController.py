@@ -123,7 +123,6 @@ class ConditioningControlClient(basic.LineReceiver):
             if command=="F":
                 # run Fear Conditioning
                 passCommandToTeensy = True
-                print(current_parameters["BlockDuration"])
                 try:
                     delayTimes = map(int,current_parameters["BlockDuration"].split(","))
                     print(delayTimes)

@@ -125,7 +125,7 @@ class Camera(object):
         if self.activeVideo is not None:
             self.queueTimelapse(tlParams, 5 + self.activeVideo.secondsRemaining())
         # Send command
-        sentTimelapseCommand(tlParams)
+        sendTimelapseCommand(tlParams)
         # Write to log
         self.logger.writeToLog(formatLogString('startTL','intervalLen',tlParams['interval'],'timestamp',tlParams['timestamp']))
         # Store start time
