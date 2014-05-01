@@ -350,7 +350,7 @@ class LoggingService(service.Service):
         baseName = ConditioningControlClient.cageName
         dt = datetime.datetime.now()
         timestamp = generateTimestamp()
-        self.logFile = open(os.path.join(logDir, "{}_{}.log".format(baseName, timestamp )), "w")
+        self.logFile = open(os.path.join(self.logDir, "{}_{}.log".format(baseName, timestamp )), "w")
         
     # Function to log events
     def writeToLog(self, line):
