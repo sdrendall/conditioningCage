@@ -293,4 +293,7 @@ def sendVideoCommand(p):
 
     commandString = commandString.format(**p)
     print commandString
+    # make sure the camera isn't being used
+    sp.Popen('killall raspistill', shell=True)
+    sp.Popen('killall raspivid', shell=True)
     sp.Popen(commandString, shell=True)
