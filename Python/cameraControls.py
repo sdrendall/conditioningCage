@@ -110,7 +110,7 @@ class Camera(object):
         # Send command
         sendVideoCommand(vidParams)
         # Write to log
-        self.logger.writeToLog('startVid')
+        self.logger.writeToLog(formatLogString('startVid', 'timestamp', vidParams['dateTime']))
         # Store start time
         vidParams['startTime'] = dt.datetime.now()
         # Stop the video at the end of its duration
@@ -161,6 +161,10 @@ class Camera(object):
         # Log
         self.logger.writeToLog("stopVid")
 
+        # Restart deferred timelapses
+        if self.deferredTimelapse is not None:
+            self.restartDeferredTimelapse()
+
     def deferTimelapse(self, timelapse, delay):
         # Stop the active timelapse
         if self.activeTimelapse is not None:
@@ -174,6 +178,19 @@ class Camera(object):
         # Schedule Timelapse
         self.deferredTimelapse = timelapse
         self.deferredTimelapse.queue(delay)
+
+    def restartDeferrredTimelapse(self):
+        # Return if there isn't a deferred timelapse
+        if self.deferredTimelapse is None:
+            return
+        # Stop ongoing timelapse
+        if self.activeTimelapse is not None:
+            self.stopTimelapse()
+        # Cancel callLater and start timelapse
+        self.deferredTimelapse.cancelDeferredStart()
+        self.deferredTimelapse.start()
+        # rerefrence deferredTimelapse as activeTimelapse
+        self.activeTimelapse, self.deferredTimelapse = self.deferredTimelapse, None
 
     def stopTimelapse(self):
         if self.activeTimelapse is not None:
