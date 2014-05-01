@@ -17,10 +17,13 @@ from twisted.protocols import basic
 from twisted.internet.serialport import SerialPort
 from twisted.application import service, internet
 
+ccServer = "10.117.33.13"
+anima = "10.200.0.39"
+
 # IP Addresses to search for server and to stream video to respectively
-IP_ADDR = "10.117.33.13" # ccServer is 10.117.33.13
+IP_ADDR = anima
 IP_PORT = 1025
-IP_ADDR_VIDEO = IP_ADDR # ccServer is 10.117.33.13
+IP_ADDR_VIDEO = IP_ADDR 
 IP_PORT_VIDEO = 5001
 
 # Determine IP address of controller
