@@ -89,6 +89,7 @@ class Camera(object):
 
     def __init__(self, logger=Logger()):
         self.activeTimelapse = None
+        self.deferredTimelapse = None
         self.activeVideo = None
         # Set logger object
         self.logger = logger
