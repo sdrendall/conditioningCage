@@ -14,12 +14,12 @@ import cameraControls
 from twisted.internet import protocol
 from twisted.protocols import basic
 from twisted.internet.serialport import SerialPort
-from twisted.application import service
+from twisted.application import service, internet
 
 # IP Addresses to search for server and to stream video to respectively
 IP_ADDR = "10.117.33.13" # ccServer is 10.117.33.13
 IP_PORT = 1025
-IP_ADDR_VIDEO = "10.117.33.13" # ccServer is 10.117.33.13
+IP_ADDR_VIDEO = IP_ADDR # ccServer is 10.117.33.13
 IP_PORT_VIDEO = 5001
 
 # Determine IP address of controller
@@ -78,12 +78,10 @@ class ConditioningControlClient(basic.LineReceiver):
         self.teensy = self.factory.teensy
         global global_server
         global_server = self
-        global IP_ADDR_VIDEO
-        IP_ADDR_VIDEO = self.transport.getPeer()
-        print IP_ADDR_VIDEO
 
     def lineReceived(self, line):
         global global_teensy
+        global current_parameters
         print "Server:", line
         paramArray = line.split(":", 1)
 
@@ -162,7 +160,6 @@ class ConditioningControlClient(basic.LineReceiver):
 
             elif command=="V":
                 # run non-FC video streaming
-                global current_parameters
                 videoParameters = {
                 "streamTo": IP_ADDR_VIDEO,
                 "streamPort": IP_PORT_VIDEO,
@@ -299,7 +296,7 @@ class TeensyConnectionFactory(protocol.ClientFactory):
 class TeensyService(service.Service):
     # A Service to handle the connection to the teensy
 
-    def __init__(factory, device):
+    def __init__(self, factory, device):
         self.factory = factory
         self.device = device
         self.port = None
@@ -345,7 +342,7 @@ class LoggingService(service.Service):
 
     def openNewLogFile(self):
         if self.logFile:
-            if not self.logFile.closed
+            if not self.logFile.closed:
                 logFile.close()
         baseName = ConditioningControlClient.cageName
         dt = datetime.datetime.now()
@@ -371,17 +368,17 @@ def generateTimestamp():
 
 # Gets the teensy's addr
 def getTeensyDev():
-teensy = None
-if sys.platform == "linux2":
-    devices = glob.glob("/dev/serial/by-path/*usb*")
-    if devices:
-        teensy = devices[0]
-# for debugging on a mac:
-elif sys.platform == "darwin":
-    devices = glob.glob('/dev/tty.usb*')
-    if devices:
-        teensy = devices[0]
-return teensy
+    teensy = None
+    if sys.platform == "linux2":
+        devices = glob.glob("/dev/serial/by-path/*usb*")
+        if devices:
+            teensy = devices[0]
+    # for debugging on a mac:
+    elif sys.platform == "darwin":
+        devices = glob.glob('/dev/tty.usb*')
+        if devices:
+            teensy = devices[0]
+    return teensy
 
 # This should all be in a .tac file.  For now its just going to sit here.
 

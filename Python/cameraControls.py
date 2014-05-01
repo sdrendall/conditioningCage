@@ -4,6 +4,63 @@ import subprocess as sp
 import sys, re, time, os, socket, pprint
 import datetime as dt
 
+
+# Helper functions
+def formatLogString(*words):
+    logStr = "{} " * len(words)
+    logStr.format(*words)
+    return logStr[:(len(s) - 1)]
+
+def generateDateString():
+    return dt.datetime.now().isoformat(' ')[:19]
+    
+
+def generateTimestamp():
+    now = dt.datetime.now()
+    return "{:04}{:02}{:02}_{:02}{:02}".format(
+        now.year, now.month, now.day, now.hour, now.minute)
+
+def mergeDicts(d1, d2):
+    d = d1.copy()
+    for key, value in d2:
+        d[key] = value
+
+
+# Logging class - in lieu of a LoggingService
+class Logger(object):
+    # An object to handle logging
+    # Used to write to log files
+
+    def __init__(self):
+        self.logFile = None
+        self.logDir = None
+        self.ensureLogPath()
+        self.openNewLogFile()
+
+    def ensureLogPath(self):
+        self.logDir = os.path.expanduser("~/logs/")
+        if not os.path.exists(self.logDir):
+            os.mkdir(self.logDir)
+
+    def openNewLogFile(self):
+        if self.logFile:
+            if not self.logFile.closed:
+                logFile.close()
+        filename = "cameraLog_" + generateTimestamp() + '.log'
+        self.logFile = open(os.path.join(self.logDir, filename), "w")
+
+    def closeLogFile(self):
+        self.logFile.close()
+        
+    # Function to log events
+    def writeToLog(self, line):
+        if not self.logFile:
+            self.openLogFile()
+        self.logFile.write('{} {}\n'.format(generateDateString(), line))
+        self.logFile.flush()
+
+
+# The main event
 class Camera(object):
 
     defaultTLParams = {
@@ -114,39 +171,6 @@ class Video(CameraState):
     pass
 
 
-class Logger(object):
-    # An object to handle logging
-    # Used to write to log files
-
-    def __init__(self):
-        self.logFile = None
-        self.logDir = None
-        self.ensureLogPath()
-        self.openNewLogFile()
-
-    def ensureLogPath(self):
-        self.logDir = os.path.expanduser("~/logs/")
-        if not os.path.exists(self.logDir):
-            os.mkdir(self.logDir)
-
-    def openNewLogFile(self):
-        if self.logFile:
-            if not self.logFile.closed
-                logFile.close()
-        filename = "cameraLog_" + generateTimestamp() + '.log'
-        self.logFile = open(os.path.join(self.logDir, filename), "w")
-
-    def closeLogFile(self):
-        self.logFile.close()
-        
-    # Function to log events
-    def writeToLog(self, line):
-        if not self.logFile:
-            self.openLogFile()
-        self.logFile.write('{} {}\n'.format(generateDateString(), line))
-        self.logFile.flush()
-
-
 def sendTimelapseCommand(p):
     commandString = "raspistill -q {jpegQuality} -w {width} -h {height} " \
                     "-t {duration} -tl {interval} "\
@@ -172,24 +196,3 @@ def sendVideoCommand(p):
                     "rm {outputPath}.h264)"
 
     commandString = commandString.format(**videoParameters)
-
-
-def formatLogString(*words):
-    logStr = ""
-    for word in words:
-        logStr += "{} ".format(word)
-    return logStr
-
-def generateDateString():
-    return dt.datetime.now().isoformat(' ')[:19]
-    
-
-def generateTimestamp():
-    now = dt.datetime.now()
-    return "{:04}{:02}{:02}_{:02}{:02}".format(
-        now.year, now.month, now.day, now.hour, now.minute)
-
-def mergeDicts(d1, d2):
-    d = d1.copy()
-    for key, value in d2:
-        d[key] = value
