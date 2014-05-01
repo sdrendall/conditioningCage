@@ -126,7 +126,11 @@ class Camera(object):
             self.stopTimelapse()
         # Check for existing video
         if self.activeVideo is not None:
-            self.queueTimelapse(tlParams, 5 + self.activeVideo.secondsRemaining())
+            vidTimeRemaining = self.activeVideo.secondsRemaining()
+            if vidTimeRemaining < 0:
+                self.stopVideo
+            else:
+                self.queueTimelapse(tlParams, 5 + vidTimeRemaining)
         # Send command
         sendTimelapseCommand(tlParams)
         # Write to log
@@ -189,6 +193,8 @@ def sendTimelapseCommand(p):
                     "-t {duration} -tl {interval} "\
                     "-o ~/timelapse/{cageName}_{dateTime}_%05d.jpg"
     commandString = commandString.format(**p)
+
+    print commandString
     sp.Popen(commandString, shell=True)
 
 
@@ -210,4 +216,5 @@ def sendVideoCommand(p):
                     "rm {outputPath}.h264)"
 
     commandString = commandString.format(**p)
+    print commandString
     sp.Popen(commandString, shell=True)
