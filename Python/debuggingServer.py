@@ -21,7 +21,7 @@ class IoCommandProtocol(LineReceiver):
         self.transport.write('>>> ')
 
     def printToDisplay(self, line):
-        self.sendLine('')
+        self.transport.write('\n')
         self.transport.write(line)
         self.transport.write('>>> ')
 

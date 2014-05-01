@@ -22,9 +22,9 @@ def generateTimestamp():
 
 def mergeDicts(d1, d2):
     d = d1.copy()
-    for key, value in d2:
+    for key, value in d2.iteritems():
         d[key] = value
-
+    return d
 
 # Logging class - in lieu of a LoggingService
 class Logger(object):
