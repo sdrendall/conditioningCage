@@ -240,7 +240,7 @@ class Timelapse(CameraState):
         # cancel the deferredStart if it's running
         self.cancelDeferredStart()
         from twisted.internet import reactor
-        self['deferredStart'] = reactor.callLater(self.start)
+        self['deferredStart'] = reactor.callLater(delay, self.start)
 
     def cancelDeferredStop(self):
         if 'deferredStop' in self:
