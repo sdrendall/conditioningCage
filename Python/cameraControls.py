@@ -179,7 +179,7 @@ class Camera(object):
         self.deferredTimelapse = timelapse
         self.deferredTimelapse.queue(delay)
 
-    def restartDeferrredTimelapse(self):
+    def restartDeferredTimelapse(self):
         # Return if there isn't a deferred timelapse
         if self.deferredTimelapse is None:
             return

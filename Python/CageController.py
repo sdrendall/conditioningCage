@@ -245,20 +245,16 @@ class TeensyClient(basic.LineReceiver):
 
     logger = None
 
-    def sendLine(self, line):
-        print "To Teensy: ", line
-        basic.LineReceiver.sendLine(self, line)
-
     def connectionMade(self):
         print "connected to Teensy!"
         global global_teensy
         global_teensy = self
 
     def lineReceived(self, line):
-        print "From Teensy: " + line
         global global_server
         if global_server:
-            global_server.sendLine(line)
+            if not line.startswith("LOG "):
+                global_server.sendLine(line)
         else:
             print "no global_server"
         if line.startswith("LOG "):
