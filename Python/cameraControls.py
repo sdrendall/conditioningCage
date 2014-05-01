@@ -216,11 +216,6 @@ class CameraState(dict):
         return r.total_seconds()
 
 class Timelapse(CameraState):
-
-    def __init__(self, *args, **kwargs):
-        for key, val in kwargs.iteritems():
-            self[key] = val
-        self.picNo = 0
     
     def start(self):
         # Remove queued starts or stops
@@ -271,8 +266,10 @@ class Timelapse(CameraState):
         sp.Popen(commandString, shell=True)
 
     def getNextImageNumber(self):
-        self.picNo += 1
-        return self.picNo 
+        if not 'picNo' in self:
+            self['picNo'] = 0
+        self['picNo'] += 1
+        return self['picNo'] 
 
 class Video(CameraState):
     pass
