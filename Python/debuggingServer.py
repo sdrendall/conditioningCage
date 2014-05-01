@@ -21,7 +21,7 @@ class IoCommandProtocol(LineReceiver):
         self.transport.write('>>> ')
 
     def printToDisplay(self, line):
-        self.sendLine()
+        self.sendLine('')
         self.transport.write(line)
         self.transport.write('>>> ')
 
@@ -112,6 +112,7 @@ def main():
     from twisted.internet import reactor
     factory = CageServerFactory(IoCommandProtocol())
     reactor.listenTCP(1025, factory)
+    stdio.StandardIO(factory.io)
     reactor.run()
 
 if __name__ == '__main__':
