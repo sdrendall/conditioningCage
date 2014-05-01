@@ -3,7 +3,8 @@
 # This is the source and configuration file (someday they will be separate) for the RasPi Cage Client daemon.
 # IT SHOULD NOT BE CALLED DIRECTLY FROM THE PYTHON INTERPRETER, THAT WILL NOT WORK
 # Instead, the daemon can be started like so:
-#   twistd CageController.py
+#   twistd --python CageController.py
+# The --nodaemon flag can be included to run the program out of the terminal, for debugging convenience
 
 import sys, re, time, datetime, os
 import glob
