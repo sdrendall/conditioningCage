@@ -278,9 +278,9 @@ class TeensyConnectionFactory(protocol.ClientFactory):
 
     # link teensy clients to the logger when building
     def buildProtocol(self, addr):
-        protocol = protocol.ClientFactory.buildProtocol(self, addr)
-        protocol.logger = self.loggingService
-        return protocol
+        p = protocol.ClientFactory.buildProtocol(self, addr)
+        p.logger = self.loggingService
+        return p
 
     def clientConnectionFailed(self, connector, reason):
         print "Teensy Connection failed!"
