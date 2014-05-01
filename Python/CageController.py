@@ -219,12 +219,12 @@ class CageConnectionFactory(protocol.ClientFactory):
 
     # link cage clients to their loggers when building
     def buildProtocol(self, addr):
-        protocol = protocol.ClientFactory.buildProtocol(self, addr)
-        protocol.logger = self.loggingService
+        p = protocol.ClientFactory.buildProtocol(self, addr)
+        p.logger = self.loggingService
         # Create a camera object to be used by the raspberry pi
         # Uses this module's writeToLog function to log 
-        protocol.camera = self.camera
-        return protocol
+        p.camera = self.camera
+        return p
 
     def clientConnectionFailed(self, connector, reason):
         print "Connection failed!"
