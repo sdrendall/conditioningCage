@@ -331,11 +331,12 @@ class LoggingService(service.Service):
 
     def startService(self):
         service.Service.startService(self)
-        self.openNewLogFile
+        self.openNewLogFile()
 
     def stopService(self):
         service.Service.stopService(self)
-        self.logFile.close()
+        if self.logFile is not None:
+            self.logFile.close()
 
     def ensureLogPath(self):
         self.logDir = os.path.expanduser("~/logs/")

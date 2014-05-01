@@ -65,10 +65,10 @@ class CageServer(LineReceiver):
 
     def connectionMade(self):
         self.addr = self.transport.getPeer()
-        self.io.printToDisplay('Connected To ' + self.addr)
+        self.io.printToDisplay('Connected To {}'.format(self.addr))
 
     def connectionLost(self, reason):
-        self.io.printToDisplay('Connection To ' + self.addr + ' lost!')
+        self.io.printToDisplay('Connection To {} lost!'.format(self.addr))
         self.io.removeClient()
 
     def lineReceived(self, line):
