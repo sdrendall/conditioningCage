@@ -146,7 +146,7 @@ class ConditioningControlClient(basic.LineReceiver):
                     'bitrate': 1000000,
                     'dateTime': generateTimestamp(),
                 }
-                videoParams['outputPath'] =  savePath + "/{cageName}_FC_{dateTime}".format(**videoParams)
+                videoParams['outputPath'] =  savePath + "{cageName}_FC_{dateTime}".format(**videoParams)
 
                 # Start a video
                 self.camera.startVideo(videoParams)
