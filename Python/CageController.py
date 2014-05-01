@@ -165,7 +165,8 @@ class ConditioningControlClient(basic.LineReceiver):
                 videoParameters = {
                 "streamTo": IP_ADDR_VIDEO,
                 "streamPort": IP_PORT_VIDEO,
-                'stream': True
+                'stream': True,
+                'dateTime': generateTimestamp()
                 }
                 self.camera.startVideo(videoParameters)
 

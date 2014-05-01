@@ -263,6 +263,7 @@ class Timelapse(CameraState):
                         "-o ~/timelapse/{cageName}_{dateTime}_%05d.jpg" \
                         % self.getNextImageNumber()
         commandString = commandString.format(**self)
+        raspikill()
         sp.Popen(commandString, shell=True)
 
     def getNextImageNumber(self):
@@ -294,6 +295,9 @@ def sendVideoCommand(p):
     commandString = commandString.format(**p)
     print commandString
     # make sure the camera isn't being used
-    sp.Popen('killall raspistill', shell=True)
-    sp.Popen('killall raspivid', shell=True)
+    raspikill()
     sp.Popen(commandString, shell=True)
+
+def raspikill():
+    sp.Popen('killall raspivid', shell=True)
+    sp.Popen('killall raspistill', shell=True)
