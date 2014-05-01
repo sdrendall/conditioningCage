@@ -181,7 +181,7 @@ def sendTimelapseCommand(p):
 def sendVideoCommand(p):
     # Generate Command String
     # Append on outputs based on params
-    commandString = "raspivid -t {vTime} -fps 30 -cfx 128:128 " \
+    commandString = "raspivid -t {duration} -fps 30 -cfx 128:128 " \
         "-b {bitrate} -w {width} -h {height}"
     if p['stream']:
         commandString += " -o - |"
