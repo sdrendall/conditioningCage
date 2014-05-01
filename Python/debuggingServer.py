@@ -36,7 +36,7 @@ class IoCommandProtocol(LineReceiver):
     def addClient(self, client):
         self.client = client
 
-    def removeClient(self, client):
+    def removeClient(self):
         self.client = None
 
 
