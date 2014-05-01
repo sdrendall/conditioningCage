@@ -99,8 +99,7 @@ class Camera(object):
         vidParams = mergeDicts(self.defaultVideoParams, params)
         # Check for existing timelapse
         if self.activeTimelapse is not None:
-            self.queueTimelapse(self.activeTimelapse, 5 + vidParams['duration']/1000)
-            self.stopTimelapse()
+            self.deferTimelapse(self.activeTimelapse, 5 + vidParams['duration']/1000)
         # Check for existing video
         if self.activeVideo is not None:
             print "Video Already in Progress!"
@@ -121,27 +120,32 @@ class Camera(object):
     def startTimelapse(self, params):
         # Update Parameters
         tlParams = mergeDicts(self.defaultTLParams, params)
-        # Check for existing timelapse
+        # Check for existing timelapses
         if self.activeTimelapse is not None:
             self.stopTimelapse()
+        # Throw out a queued timelapse if another one is to be started
+        if self.deferredTimelapse is not None:
+            self.deferredTimelapse.cancelDeferredStart()
+            self.deferredTimelapse = None
+        # Create the timelapse
+        timelapse = Timelapse(params)
         # Check for existing video
         if self.activeVideo is not None:
+            # if a video is running, start the timelapse when it finishes
             vidTimeRemaining = self.activeVideo.secondsRemaining()
             if vidTimeRemaining < 0:
-                self.stopVideo
+                self.stopVideo()
             else:
-                self.queueTimelapse(tlParams, 5 + vidTimeRemaining)
-        # Send command
-        sendTimelapseCommand(tlParams)
+                self.deferTimelapse(timelapse, 5 + vidTimeRemaining)
+                return
+        # Start timelapse
+        timelapse.start()
         # Write to log
-        self.logger.writeToLog(formatLogString('startTL','intervalLen',tlParams['interval'],'timestamp',tlParams['timestamp']))
+        self.logger.writeToLog(formatLogString('startTL','intervalLen',timelapse['interval'],'timestamp',timelapse['timestamp']))
         # Store start time
-        tlParams['startTime'] = dt.datetime.now()
-        # Stop the timelapse at the end of it's duration
-        from twisted.internet import reactor
-        tlParams['deferredStop'] = reactor.callLater(tlParams['duration']/1000, self.stopTimelapse)
-        # Store TL parameters
-        self.activeTimelapse = Timelapse(tlParams)
+        timelapse['startTime'] = dt.datetime.now()
+        # Update activeTimelapse
+        self.activeTimelapse = timelapse
 
     def stopVideo(self):
         if self.activeVideo is not None:
@@ -155,10 +159,19 @@ class Camera(object):
         # Log
         self.logger.writeToLog("stopVid")
 
-    def queueTimelapse(self, params, delay):
+    def deferTimelapse(self, timelapse, delay):
+        # Stop the active timelapse
+        if self.activeTimelapse is not None:
+            self.stopTimelapse()
+        # Overwrite current deferredTimelapse
+        if self.deferredTimelapse is not None:
+            self.deferredTimelapse.cancelDeferredStart()
+        # Kill queued starts and stops
+        timelapse.cancelDeferredStart()
+        timelapse.cancelDeferredStop()
         # Schedule Timelapse
-        from twisted.internet import reactor
-        reactor.callLater(delay, self.startTimelapse, params)
+        self.deferredTimelapse = timelapse
+        self.deferredTimelapse.queue(delay)
 
     def stopTimelapse(self):
         if self.activeTimelapse is not None:
@@ -166,9 +179,11 @@ class Camera(object):
                 self.activeTimelapse['deferredStop'].cancel()
             except:
                 pass
+            try:
+                self.activeTimelapse.stop()
+            except:
+                pass
             self.activeTimelapse = None
-        # Kill timelapse processes
-        sp.Popen("killall raspistill", shell=True)
         # Log
         self.logger.writeToLog('stopTL')
 
@@ -182,21 +197,63 @@ class CameraState(dict):
         return r.total_seconds()
 
 class Timelapse(CameraState):
-    pass
+    
+    def start(self):
+        # Remove queued starts or stops
+        self.cancelDeferredStart()
+        self.cancelDeferredStart()
 
+        # Start a Looping call of raspistills
+        self['loopingCall'] = LoopingCall(self.captureImage)
+        self['loopingCall'].start(self['interval'])
+
+        # Schedule an ending
+        from twisted.internet import reactor
+        self['deferredStop'] = reactor.callLater(self['duration'], self.stop)
+
+    def stop(self):
+        # Cancel the deferredStop if it's running
+        self.cancelDeferredStop()
+        self['loopingCall'].stop()
+
+    def queue(self, delay):
+        # queues a timelapse to be started after delay
+        # cancel the deferredStart if it's running
+        self.cancelDeferredStart()
+        from twisted.internet import reactor
+        self['deferredStart'] = reactor.callLater(self.start(params))
+
+    def cancelDeferredStop(self):
+        if 'deferredStop' in self:
+            try:
+                self['deferredStop'].cancel()
+            except:
+                pass
+            self.popitem('deferredStop')
+
+    def cancelDeferredStart(self):
+        if 'deferredStart' in self:
+            try:
+                self['deferredStart'].cancel()
+            except:
+                pass
+            self.popitem('deferredStart')
+
+    def captureImage(self):
+        commandString = "raspistill -q {jpegQuality} -w {width} -h {height} " \
+                        "-o ~/timelapse/{cageName}_{dateTime}_%05d.jpg" \
+                        % self.getNextImageNumber()
+        commandString = commandString.format(**self)
+        sp.Popen(commandString, shell=True)
+
+    def getNextImageNumber(self):
+        num = 0
+        while True:
+            num += 1
+            yield num 
 
 class Video(CameraState):
     pass
-
-def sendTimelapseCommand(p):
-    commandString = "raspistill -q {jpegQuality} -w {width} -h {height} " \
-                    "-t {duration} -tl {interval} "\
-                    "-o ~/timelapse/{cageName}_{dateTime}_%05d.jpg"
-    commandString = commandString.format(**p)
-
-    print commandString
-    sp.Popen(commandString, shell=True)
-
 
 def sendVideoCommand(p):
     # Generate Command String
