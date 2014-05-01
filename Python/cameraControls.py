@@ -112,6 +112,8 @@ class Camera(object):
         self.logger.writeToLog('startVid')
         # Store start time
         vidParams['startTime'] = dt.datetime.now()
+        # Stop the video at the end of its duration
+        vidParams['deferredStop'] = reactor.callLater(vidParams['duration'], self.stopVideo)
         # Store vid parameters
         self.activeVideo = Video(vidParams)
 
@@ -130,16 +132,22 @@ class Camera(object):
         self.logger.writeToLog(formatLogString('startTL','intervalLen',tlParams['interval'],'timestamp',tlParams['timestamp']))
         # Store start time
         tlParams['startTime'] = dt.datetime.now()
+        # Stop the timelapse at the end of it's duration
+        tlParams['deferredStop'] = reactor.callLater(tlParams['duration'], self.stopTimelapse)
         # Store TL parameters
         self.activeTimelapse = Timelapse(tlParams)
 
     def stopVideo(self):
         if self.activeVideo is not None:
+            try:
+                self.activeVideo['deferredStop'].cancel()
+            except:
+                pass
             self.activeVideo = None
         # Kill video processes
         sp.Popen('killall raspivid', shell=True)
         # Log
-        self.logger.writeToLog("stopTL")
+        self.logger.writeToLog("stopVid")
 
     def queueTimelapse(self, params, delay):
         # Schedule Timelapse
@@ -148,11 +156,15 @@ class Camera(object):
 
     def stopTimelapse(self):
         if self.activeTimelapse is not None:
+            try:
+                self.activeTimelapse['deferredStop'].cancel()
+            except:
+                pass
             self.activeTimelapse = None
         # Kill timelapse processes
         sp.Popen("killall raspistill", shell=True)
         # Log
-        self.logger.writeToLog('stopVid')
+        self.logger.writeToLog('stopTL')
 
 
 class CameraState(dict):
@@ -169,7 +181,6 @@ class Timelapse(CameraState):
 
 class Video(CameraState):
     pass
-
 
 def sendTimelapseCommand(p):
     commandString = "raspistill -q {jpegQuality} -w {width} -h {height} " \

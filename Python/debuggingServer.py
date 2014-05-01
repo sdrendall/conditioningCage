@@ -87,7 +87,7 @@ class CageServer(LineReceiver):
     def do_starttimelapse(self, *args):
         self.sendLine('T')
 
-    def do_endtimelapse(self, *args):
+    def do_stoptimelapse(self, *args):
         self.sendLine('E')
 
     def do_startfc(self, *args):

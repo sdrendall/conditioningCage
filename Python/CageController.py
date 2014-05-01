@@ -177,7 +177,9 @@ class ConditioningControlClient(basic.LineReceiver):
 
                 timelapseParams = {
                 'cageName': socket.gethostname(),
-                'dateTime': generateTimestamp()
+                'dateTime': generateTimestamp(),
+                'duration': 20*60*1000,
+                'interval': 2000
                 }
                 self.camera.startTimelapse(timelapseParams)
 
@@ -384,14 +386,10 @@ def getTeensyDev():
 
 # This should all be in a .tac file.  For now its just going to sit here.
 
-# get cage name from command line
-if len(sys.argv)>1:
-    cageName = sys.argv[1]
-    # clean up cage name
-    rx = re.compile('\W+')
-    cageName = rx.sub(' ', sys.argv[1]).strip()
-    if cageName:
-        ConditioningControlClient.cageName = cageName
+# get cage name
+cageName = socket.gethostname()
+if cageName:
+    ConditioningControlClient.cageName = cageName
 
 # Create a master service to hold all functional services
 masterService = service.MultiService()
