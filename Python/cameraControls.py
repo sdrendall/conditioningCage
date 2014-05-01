@@ -9,7 +9,7 @@ from twisted.internet.task import LoopingCall
 # Helper functions
 def formatLogString(*words):
     logStr = "{} " * len(words)
-    logStr.format(*words)
+    logStr = logStr.format(*words)
     return logStr[:(len(logStr) - 1)]
 
 def generateDateString():
