@@ -187,7 +187,7 @@ def sendVideoCommand(p):
         commandString += " -o - |"
         if p['outputPath'] is not None:
             commandString += " tee {outputPath} |"
-        commandString += " nc {vIP} {vPort}"
+        commandString += " nc {streamTo} {streamPort}"
     elif p['outputPath'] is not None:
         commandString += " -o {outputPath}.h264"
 
