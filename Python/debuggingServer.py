@@ -1,6 +1,6 @@
 from twisted.internet import stdio
 from twisted.protocols.basic import LineReceiver
-from twisted.interent.protocol import ServerFactory
+from twisted.internet.protocol import ServerFactory
 
 import os, sys, datetime
 import subprocess as sp
@@ -56,24 +56,10 @@ class IoCommandProtocol(LineReceiver):
             self.printToDisplay('No Clients Connected!')
 
 
-class CageServerFactory(ServerFactory):
-
-    protocol = CageServer
-
-    def __init__(self, ioProtocol):
-        self.io = ioProtocol
-
-    def buildProtocol(self, addr):
-        protocol = ServerFactory.buildProtocol(self, addr)
-        protocol.io = self.io
-        self.io.addClient(protocol)
-        return protocol
-
-
 class CageServer(LineReceiver):
 
     io = None
-    
+
     def __init__(self):
         self.addr = None
 
@@ -108,6 +94,19 @@ class CageServer(LineReceiver):
 
     def do_stopfc(self, *args):
         self.sendLine('X')
+
+class CageServerFactory(ServerFactory):
+
+    protocol = CageServer
+
+    def __init__(self, ioProtocol):
+        self.io = ioProtocol
+
+    def buildProtocol(self, addr):
+        protocol = ServerFactory.buildProtocol(self, addr)
+        protocol.io = self.io
+        self.io.addClient(protocol)
+        return protocol
 
 def main():
     from twisted.internet import reactor
