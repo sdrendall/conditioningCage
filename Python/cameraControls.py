@@ -240,7 +240,7 @@ class Timelapse(CameraState):
         # cancel the deferredStart if it's running
         self.cancelDeferredStart()
         from twisted.internet import reactor
-        self['deferredStart'] = reactor.callLater(self.start(params))
+        self['deferredStart'] = reactor.callLater(self.start)
 
     def cancelDeferredStop(self):
         if 'deferredStop' in self:
@@ -262,7 +262,6 @@ class Timelapse(CameraState):
         commandString = "raspistill -t 0 -q {jpegQuality} -w {width} -h {height} " \
                         "-o ~/timelapse/{cageName}_{dateTime}_%05d.jpg" \
                         % self.getNextImageNumber()
-        pprint.pprint(self)
         commandString = commandString.format(**self)
         sp.Popen(commandString, shell=True)
 
