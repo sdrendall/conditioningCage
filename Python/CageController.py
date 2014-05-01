@@ -138,7 +138,7 @@ class ConditioningControlClient(basic.LineReceiver):
 
                 # Compile parameters
                 videoParams = {
-                    'duration': fcDuration,
+                    'duration': 20000,
                     'cageName': socket.gethostname(),
                     # possible width/heights: 1920x1080; 1280x720; 854x480
                     'width': 854,
@@ -178,7 +178,7 @@ class ConditioningControlClient(basic.LineReceiver):
                 timelapseParams = {
                 'cageName': socket.gethostname(),
                 'dateTime': generateTimestamp(),
-                'duration': 20*60*1000,
+                'duration': 30*1000,
                 'interval': 2000
                 }
                 self.camera.startTimelapse(timelapseParams)
