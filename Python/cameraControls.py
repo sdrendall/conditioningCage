@@ -262,6 +262,7 @@ class Timelapse(CameraState):
         commandString = "raspistill -q {jpegQuality} -w {width} -h {height} " \
                         "-o ~/timelapse/{cageName}_{dateTime}_%05d.jpg" \
                         % self.getNextImageNumber()
+        pprint.pprint(self)
         commandString = commandString.format(**self)
         sp.Popen(commandString, shell=True)
 
