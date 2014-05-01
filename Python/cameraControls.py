@@ -99,7 +99,7 @@ class Camera(object):
         vidParams = mergeDicts(self.defaultVideoParams, params)
         # Check for existing timelapse
         if self.activeTimelapse is not None:
-            self.queueTimelapse(self.activeTimelapse, 5 + vidParams[duration]/1000)
+            self.queueTimelapse(self.activeTimelapse, 5 + vidParams['duration']/1000)
             self.stopTimelapse()
         # Check for existing video
         if self.activeVideo is not None:
