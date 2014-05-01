@@ -114,7 +114,7 @@ class Camera(object):
         vidParams['startTime'] = dt.datetime.now()
         # Stop the video at the end of its duration
         from twisted.internet import reactor
-        vidParams['deferredStop'] = reactor.callLater(vidParams['duration'], self.stopVideo)
+        vidParams['deferredStop'] = reactor.callLater(vidParams['duration']/1000, self.stopVideo)
         # Store vid parameters
         self.activeVideo = Video(vidParams)
 
@@ -139,7 +139,7 @@ class Camera(object):
         tlParams['startTime'] = dt.datetime.now()
         # Stop the timelapse at the end of it's duration
         from twisted.internet import reactor
-        tlParams['deferredStop'] = reactor.callLater(tlParams['duration'], self.stopTimelapse)
+        tlParams['deferredStop'] = reactor.callLater(tlParams['duration']/1000, self.stopTimelapse)
         # Store TL parameters
         self.activeTimelapse = Timelapse(tlParams)
 
