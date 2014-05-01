@@ -216,6 +216,10 @@ class CameraState(dict):
         return r.total_seconds()
 
 class Timelapse(CameraState):
+
+    def __init__(self, **kwargs):
+        CameraState.__init__(self, **kwargs)
+        self.picNo = 0
     
     def start(self):
         # Remove queued starts or stops
@@ -259,7 +263,7 @@ class Timelapse(CameraState):
             self.popitem('deferredStart')
 
     def captureImage(self):
-        commandString = "raspistill -q {jpegQuality} -w {width} -h {height} " \
+        commandString = "raspistill -t 0 -q {jpegQuality} -w {width} -h {height} " \
                         "-o ~/timelapse/{cageName}_{dateTime}_%05d.jpg" \
                         % self.getNextImageNumber()
         pprint.pprint(self)
@@ -267,10 +271,8 @@ class Timelapse(CameraState):
         sp.Popen(commandString, shell=True)
 
     def getNextImageNumber(self):
-        if not 'picNo' in self:
-            self['picNo'] = 0
-        self['picNo'] += 1
-        return self['picNo'] 
+        self.picNo += 1
+        return self.picNo
 
 class Video(CameraState):
     pass
