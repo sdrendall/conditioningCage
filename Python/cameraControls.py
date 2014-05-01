@@ -217,8 +217,8 @@ class CameraState(dict):
 
 class Timelapse(CameraState):
 
-    def __init__(self, **kwargs):
-        CameraState.__init__(self, kwargs)
+    def __init__(self, *args, **kwargs):
+        CameraState.__init__(self, *args, **kwargs)
         self.picNo = 0
     
     def start(self):
