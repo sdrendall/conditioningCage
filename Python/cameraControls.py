@@ -9,7 +9,7 @@ import datetime as dt
 def formatLogString(*words):
     logStr = "{} " * len(words)
     logStr.format(*words)
-    return logStr[:(len(s) - 1)]
+    return logStr[:(len(logStr) - 1)]
 
 def generateDateString():
     return dt.datetime.now().isoformat(' ')[:19]

@@ -16,7 +16,7 @@ class IoCommandProtocol(LineReceiver):
 
     def lineReceived(self, line):
         # Ignore blank lines
-        if not line: return
+        if not line: return self.printToDisplay('')
         self.parseLine(line)
         self.transport.write('>>> ')
 
