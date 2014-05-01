@@ -130,7 +130,7 @@ class Camera(object):
             self.deferredTimelapse.cancelDeferredStart()
             self.deferredTimelapse = None
         # Create the timelapse
-        timelapse = Timelapse(params)
+        timelapse = Timelapse(tlParams)
         # Check for existing video
         if self.activeVideo is not None:
             # if a video is running, start the timelapse when it finishes
