@@ -22,7 +22,7 @@ class IoCommandProtocol(LineReceiver):
 
     def printToDisplay(self, line):
         self.transport.write('\n')
-        self.transport.write(line)
+        self.sendLine(line)
         self.transport.write('>>> ')
 
     def parseLine(self, line):

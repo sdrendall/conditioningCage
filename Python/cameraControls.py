@@ -195,4 +195,4 @@ def sendVideoCommand(p):
         commandString += "; (MP4Box -add {outputPath}.h264 {outputPath}.mp4 -fps 30 &&" \
                     "rm {outputPath}.h264)"
 
-    commandString = commandString.format(**videoParameters)
+    commandString = commandString.format(**p)
