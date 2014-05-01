@@ -224,7 +224,7 @@ class Timelapse(CameraState):
 
         # Start a Looping call of raspistills
         self['loopingCall'] = LoopingCall(self.captureImage)
-        self['loopingCall'].start(self['interval'])
+        self['loopingCall'].start(self['interval']/1000)
 
         # Schedule an ending
         from twisted.internet import reactor
