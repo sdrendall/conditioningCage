@@ -143,7 +143,7 @@ class Camera(object):
         # Start timelapse
         timelapse.start()
         # Write to log
-        self.logger.writeToLog(formatLogString('startTL','intervalLen',timelapse['interval'],'timestamp',timelapse['timestamp']))
+        self.logger.writeToLog(formatLogString('startTL','intervalLen',timelapse['interval'],'timestamp',timelapse['dateTime']))
         # Store start time
         timelapse['startTime'] = dt.datetime.now()
         # Update activeTimelapse
