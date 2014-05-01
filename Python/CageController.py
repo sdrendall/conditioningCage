@@ -79,7 +79,6 @@ class ConditioningControlClient(basic.LineReceiver):
 
     def connectionMade(self):
         self.sendLine("CageName: {}".format(self.cageName))
-        self.teensy = self.factory.teensy
         global global_server
         global_server = self
 
@@ -251,7 +250,6 @@ class TeensyClient(basic.LineReceiver):
 
     def connectionMade(self):
         print "connected to Teensy!"
-        self.factory.conditioningClientFactory.teensy = self
         global global_teensy
         global_teensy = self
 
