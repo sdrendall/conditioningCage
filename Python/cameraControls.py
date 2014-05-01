@@ -248,7 +248,7 @@ class Timelapse(CameraState):
                 self['deferredStop'].cancel()
             except:
                 pass
-            self.popitem('deferredStop')
+            del self['deferredStop']
 
     def cancelDeferredStart(self):
         if 'deferredStart' in self:
@@ -256,7 +256,7 @@ class Timelapse(CameraState):
                 self['deferredStart'].cancel()
             except:
                 pass
-            self.popitem('deferredStart')
+            del self['deferredStart']
 
     def captureImage(self):
         commandString = "raspistill -t 0 -q {jpegQuality} -w {width} -h {height} " \
