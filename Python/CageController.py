@@ -138,7 +138,7 @@ class ConditioningControlClient(basic.LineReceiver):
 
                 # Compile parameters
                 videoParams = {
-                    'duration': 20000,
+                    'duration': fcDuration,
                     'cageName': socket.gethostname(),
                     # possible width/heights: 1920x1080; 1280x720; 854x480
                     'width': 854,
