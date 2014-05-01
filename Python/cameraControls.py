@@ -189,6 +189,7 @@ def sendTimelapseCommand(p):
                     "-t {duration} -tl {interval} "\
                     "-o ~/timelapse/{cageName}_{dateTime}_%05d.jpg"
     commandString = commandString.format(**p)
+    sp.Popen(commandString, shell=True)
 
 
 def sendVideoCommand(p):
@@ -209,3 +210,4 @@ def sendVideoCommand(p):
                     "rm {outputPath}.h264)"
 
     commandString = commandString.format(**p)
+    sp.Popen(commandString, shell=True)
