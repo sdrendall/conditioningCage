@@ -179,8 +179,8 @@ class ConditioningControlClient(basic.LineReceiver):
                 timelapseParams = {
                 'cageName': socket.gethostname(),
                 'dateTime': generateTimestamp(),
-                'duration': 30*1000,
-                'interval': 2000
+                'duration': 7*24*60*60*1000,
+                'interval': 10000
                 }
                 self.camera.startTimelapse(timelapseParams)
 
