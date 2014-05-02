@@ -67,6 +67,6 @@ unmountFS() {
 
 ## MAIN -- Here's where the magic happens...
 mountFS
-syncImagesq
+syncImages
 syncLogs
 unmountFS
