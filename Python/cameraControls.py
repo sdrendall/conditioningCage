@@ -1,7 +1,7 @@
 # Controls for the raspberry pi camera
 # Based on the rapsi* bash API
 import subprocess as sp
-import sys, re, time, os, socket, pprint
+import sys, re, time, os, socket, pprint, picamera
 import datetime as dt
 from twisted.internet.task import LoopingCall
 
@@ -216,10 +216,13 @@ class CameraState(dict):
         return r.total_seconds()
 
 class Timelapse(CameraState):
+
+    camera = None
     
     def start(self):
+        # Instantiate a new camera
+        self.camera = picamera.PiCamera()
         # Remove queued starts or stops
-        self.cancelDeferredStart()
         self.cancelDeferredStart()
 
         # Start a Looping call of raspistills
@@ -233,12 +236,16 @@ class Timelapse(CameraState):
     def stop(self):
         # Cancel the deferredStop if it's running
         self.cancelDeferredStop()
+        self.camera.close()
         self['loopingCall'].stop()
 
     def queue(self, delay):
         # queues a timelapse to be started after delay
         # cancel the deferredStart if it's running
-        self.cancelDeferredStart()
+        try:
+            self.stop()
+        except:
+            pass
         from twisted.internet import reactor
         self['deferredStart'] = reactor.callLater(delay, self.start)
 
@@ -259,12 +266,9 @@ class Timelapse(CameraState):
             del self['deferredStart']
 
     def captureImage(self):
-        commandString = "raspistill -t 0 -q {jpegQuality} -w {width} -h {height} " \
-                        "-o ~/timelapse/{cageName}_{dateTime}_%05d.jpg" \
-                        % self.getNextImageNumber()
-        commandString = commandString.format(**self)
-        raspikill()
-        sp.Popen(commandString, shell=True)
+        filename = "~/timelapse/{cageName}_{dateTime}_%05d.jpg" % self.getNextImageNumber()
+        filename = filename.format(**self)
+        self.camera.capture(filename, resize=(self['width'],self['height']), quality=self['quality'])
 
     def getNextImageNumber(self):
         if not 'picNo' in self:
@@ -300,4 +304,3 @@ def sendVideoCommand(p):
 
 def raspikill():
     sp.Popen('killall raspivid', shell=True)
-    sp.Popen('killall raspistill', shell=True)
