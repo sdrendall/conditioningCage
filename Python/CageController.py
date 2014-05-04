@@ -1,25 +1,29 @@
-#! /usr/bin/python
-
 # HCFC Cage Controller program
 
-"""
-The controller for a home conditioning cage.
-It is meant to run on a RasPi and to connect to a Teensy on the USB port.
-"""
+# This is the source and configuration file (someday they will be separate) for the RasPi Cage Client daemon.
+# IT SHOULD NOT BE CALLED DIRECTLY FROM THE PYTHON INTERPRETER, THAT WILL NOT WORK
+# Instead, the daemon can be started like so:
+#   twistd --python CageController.py
+# The --nodaemon flag can be included to run the program out of the terminal, for debugging convenience
 
 import sys, re, time, datetime, os
 import glob
 import socket
 import subprocess as sp
+import cameraControls
 
-from twisted.internet import reactor, protocol
+from twisted.internet import protocol
 from twisted.protocols import basic
 from twisted.internet.serialport import SerialPort
+from twisted.application import service, internet
+
+ccServer = "10.117.33.13"
+anima = "10.200.0.39"
 
 # IP Addresses to search for server and to stream video to respectively
-IP_ADDR = "10.117.33.13" # ccServer is 10.117.33.13
+IP_ADDR = ccServer
 IP_PORT = 1025
-IP_ADDR_VIDEO = "10.117.33.13" # ccServer is 10.117.33.13
+IP_ADDR_VIDEO = IP_ADDR 
 IP_PORT_VIDEO = 5001
 
 # Determine IP address of controller
@@ -55,16 +59,6 @@ if re.match(r"10.119.",MY_IP):
 
 
 TEENSY_BAUD = 9600
-TEENSY_DEV = None
-if sys.platform == "linux2":
-    devices = glob.glob("/dev/serial/by-path/*usb*")
-    if devices:
-        TEENSY_DEV = devices[0]
-# for debugging on a mac:
-elif sys.platform == "darwin":
-    devices = glob.glob('/dev/tty.usb*')
-    if devices:
-        TEENSY_DEV = devices[0]
 
 global_teensy = None
 global_server = None
@@ -75,7 +69,8 @@ current_parameters = {}
 class ConditioningControlClient(basic.LineReceiver):
 
     cageName = socket.gethostname()
-    currentVideoFileName = ""
+    logger = None
+    camera = None
 
     def sendLine(self, line):
         "send line to stdout before transmitting, for debugging"
@@ -84,12 +79,12 @@ class ConditioningControlClient(basic.LineReceiver):
 
     def connectionMade(self):
         self.sendLine("CageName: {}".format(self.cageName))
-        self.teensy = self.factory.teensy
         global global_server
         global_server = self
 
     def lineReceived(self, line):
         global global_teensy
+        global current_parameters
         print "Server:", line
         paramArray = line.split(":", 1)
 
@@ -128,7 +123,6 @@ class ConditioningControlClient(basic.LineReceiver):
             if command=="F":
                 # run Fear Conditioning
                 passCommandToTeensy = True
-                print(current_parameters["BlockDuration"])
                 try:
                     delayTimes = map(int,current_parameters["BlockDuration"].split(","))
                     print(delayTimes)
@@ -136,91 +130,62 @@ class ConditioningControlClient(basic.LineReceiver):
                 except:
                     delayTimes = [300000]
                     print("Couldn't compute delay times. Defaulting to 5 minutes.")
+
                 fcDuration = sum(delayTimes) + 5*60*1000 # add extra five minutes after last shock
-                dir = os.path.expanduser("~/fc_videos/")
-                if not os.path.exists(dir):
-                    os.mkdir(dir)
-                videoParams = {}
-                videoParams['duration'] = fcDuration
-                videoParams['cageName'] = socket.gethostname()
-                # possible width/heights: 1920x1080; 1280x720; 854x480
-                videoParams['width'] = 854
-                videoParams['height'] = 480
-                videoParams['bitrate'] = 1000000
-                dt = datetime.datetime.now()
-                videoParams['dateTime'] = "{:04}{:02}{:02}_{:02}{:02}".format(
-                    dt.year, dt.month, dt.day, dt.hour, dt.minute)
-                videoBaseName = "~/fc_videos/{cageName}_FC_{dateTime}".format(**videoParams)
-                videoParams['fileBase'] = videoBaseName
-                self.currentVideoFileName = videoBaseName
-                commandString = "raspivid -w {width} -h {height} " \
-                    "-n -b {bitrate} -fps 30 -cfx 128:128 " \
-                    "-t {duration} -o {fileBase}.h264; " \
-                    "(MP4Box -add {fileBase}.h264 {fileBase}.mp4 -fps 30 && " \
-                    "rm {fileBase}.h264)"
-                commandString = commandString.format(**videoParams)
-                print(commandString)
-                sp.Popen(commandString, shell=True)
-                # Log Start Time
-                logEvent("startFC")
+                savePath = os.path.expanduser("~/fc_videos/")
+                if not os.path.exists(savePath):
+                    os.mkdir(savePath)
+
+                # Compile parameters
+                videoParams = {
+                    'duration': fcDuration,
+                    'cageName': socket.gethostname(),
+                    # possible width/heights: 1920x1080; 1280x720; 854x480
+                    'width': 854,
+                    'height': 480,
+                    'bitrate': 1000000,
+                    'dateTime': generateTimestamp(),
+                }
+                videoParams['outputPath'] =  savePath + "{cageName}_FC_{dateTime}".format(**videoParams)
+
+                # Start a video
+                self.camera.startVideo(videoParams)
+                
 
             elif command=="X":
                 # end Fear Conditioning
                 passCommandToTeensy = True
-                sp.Popen("killall raspivid", shell=True)
-                # fileBaseName = self.currentVideoFileName
-                # commandString = "MP4Box -add {}.h264 {}.mp4; " \
-                #     "rm {}.h264".format(fileBaseName, fileBaseName, fileBaseName)
-                # sp.Popen(commandString, shell=True)
+                self.camera.stopVideo()
 
                 # Log Stop Time
-                logEvent("stopFC")
+                self.logger.writeToLog("stopFC")
 
             elif command=="V":
                 # run non-FC video streaming
-                global current_parameters
-                videoParameters = {}
-                videoParameters["vTime"] = 60000 # TODO make this a user parameter
-                videoParameters["vIP"] = IP_ADDR_VIDEO
-                videoParameters["vPort"] = IP_PORT_VIDEO
-                commandString = "raspivid -t {vTime} -fps 30 -cfx 128:128 " \
-                    "-b 3000000 -w 1280 -h 740 -o - | nc {vIP} {vPort}"
-                commandString = commandString.format(**videoParameters)
-                sp.Popen(commandString, shell=True)
-                # Log Video stream start -- Inaccurate!!
-                logEvent("startVid")
+                videoParameters = {
+                "streamTo": IP_ADDR_VIDEO,
+                "streamPort": IP_PORT_VIDEO,
+                'stream': True,
+                'dateTime': generateTimestamp()
+                }
+                self.camera.startVideo(videoParameters)
 
             elif command=="T":
                 # run timelapse
-                dir = os.path.expanduser("~/timelapse/")
-                if not os.path.exists(dir):
-                    os.mkdir(dir)
-                timelapseParams = {}
-                timelapseParams['interval'] = 10*1000
-                timelapseParams['duration'] = 7*24*60*60*1000
-                timelapseParams['cageName'] = socket.gethostname()
-                # possible width/heights: 1280x720; 854x480
-                timelapseParams['width'] = 854
-                timelapseParams['height'] = 480
-                dt = datetime.datetime.now()
-                timelapseParams['dateTime'] = \
-                    "{:04}{:02}{:02}_{:02}{:02}".format(
-                        dt.year, dt.month, dt.day, dt.hour, dt.minute)
-                commandString = "raspistill -q 50 -w {width} -h {height} " \
-                    "-t {duration} -tl {interval} "\
-                    "-o ~/timelapse/{cageName}_{dateTime}_%05d.jpg"
-                commandString = commandString.format(**timelapseParams)
-                print(commandString)
-                sp.Popen(commandString, shell=True)
-                # Log start time
-                logEvent("startTL " + "intervalLen " + str(timelapseParams['interval']))
+                savePath = os.path.expanduser("~/timelapse/")
+                if not os.path.exists(savePath):
+                    os.mkdir(savePath)
 
+                timelapseParams = {
+                'cageName': socket.gethostname(),
+                'dateTime': generateTimestamp(),
+                'duration': 7*24*60*60*1000,
+                'interval': 10000
+                }
+                self.camera.startTimelapse(timelapseParams)
 
             elif command=="E":
-                # end timelapse
-                sp.Popen("killall raspistill", shell=True)
-                # Log time
-                logEvent("stopTL")
+                self.camera.stopTimelapse()
 
             elif command=="S":
                 passCommandToTeensy = True;
@@ -242,54 +207,78 @@ class ConditioningControlClient(basic.LineReceiver):
 
 
 class CageConnectionFactory(protocol.ClientFactory):
+
     protocol = ConditioningControlClient
+    camera = None
     teensy = None
+
+    def __init__(self, loggingService):
+        # Reference the loggingService, this will be used by each client to write to the log
+        self.loggingService = loggingService
+        # Instantiate a camera object that will be used by CageClients to write to the camera
+        self.camera = cameraControls.Camera(logger=self.loggingService)
+
+    # link cage clients to their loggers when building
+    def buildProtocol(self, addr):
+        p = protocol.ClientFactory.buildProtocol(self, addr)
+        p.logger = self.loggingService
+        # Create a camera object to be used by the raspberry pi
+        # Uses this module's writeToLog function to log 
+        p.camera = self.camera
+        return p
 
     def clientConnectionFailed(self, connector, reason):
         print "Connection failed!"
-        # reactor.stop()
         self.reconnect()
 
     def clientConnectionLost(self, connector, reason):
         print "Connection lost!"
-        # reactor.stop()
         self.reconnect()
 
     def reconnect(self):
         time.sleep(1)
         print "Reconnecting..."
+        from twisted.internet import reactor
         reactor.connectTCP(IP_ADDR, IP_PORT, self)
 
 
 class TeensyClient(basic.LineReceiver):
 
-    def sendLine(self, line):
-        print "To Teensy: ", line
-        basic.LineReceiver.sendLine(self, line)
+    logger = None
 
     def connectionMade(self):
         print "connected to Teensy!"
-        self.factory.conditioningClientFactory.teensy = self
         global global_teensy
         global_teensy = self
 
     def lineReceived(self, line):
-        print "From Teensy: " + line
         global global_server
         if global_server:
-            global_server.sendLine(line)
+            if not line.startswith("LOG "):
+                global_server.sendLine(line)
         else:
             print "no global_server"
         if line.startswith("LOG "):
             data = line[4:] # strip "LOG "
-            logEvent(data)
+            self.logger.writeToLog(data)
 
     def connectionLost(self, reason):
         print "connection to Teensy lost"
+        global global_teensy
+        global_teensy = None
 
 
 class TeensyConnectionFactory(protocol.ClientFactory):
     protocol = TeensyClient
+
+    def __init__(self, loggingService):
+        self.loggingService = loggingService
+
+    # link teensy clients to the logger when building
+    def buildProtocol(self, addr):
+        p = protocol.ClientFactory.buildProtocol(self, addr)
+        p.logger = self.loggingService
+        return p
 
     def clientConnectionFailed(self, connector, reason):
         print "Teensy Connection failed!"
@@ -303,71 +292,124 @@ class TeensyConnectionFactory(protocol.ClientFactory):
         time.sleep(1)
         print "Reconnecting to Teensy..."
         # TODO: what to put here to reconnect????
-        # reactor.connectTCP(IP_ADDR, IP_PORT, self)
+
+class TeensyService(service.Service):
+    # A Service to handle the connection to the teensy
+
+    def __init__(self, factory, device):
+        self.factory = factory
+        self.device = device
+        self.port = None
+
+    # The service is started when the twisted daemon runs.
+    # The service builds a TeensyClient using the TeensyConnectionFactory
+    # The service then opens a serial port
+    def startService(self):
+        service.Service.startService(self)
+        if self.device:
+            from twisted.internet import reactor
+            protocol = self.factory.buildProtocol(None)
+            self.port = SerialPort(protocol, self.device, reactor)
+
+    # Stopping the service dereferences the SerialPort
+    def stopService(self):
+        service.Service.stopService(self)
+        self.port = None
 
 
+class LoggingService(service.Service):
+    # A Service to handle logging
+    # Opens a log file when started
+    # Used to write to log files
 
-logFile = None
-def openNewLogFile():
-    global logFile
-    if logFile:
-        logFile.close()
-    dir = os.path.expanduser("~/logs/")
-    if not os.path.exists(dir):
-        os.mkdir(dir)
-    baseName = ConditioningControlClient.cageName
-    # fileNum = 1;
-    # while os.path.exists(os.path.join(dir, "{}_{}.log".format(baseName, fileNum))):
-    #     fileNum += 1
-    # logFile = open(os.path.join(dir, "{}_{}.log".format(baseName, fileNum)), "w")
-    dt = datetime.datetime.now()
-    dateString = "{:04}{:02}{:02}_{:02}{:02}".format(
-                    dt.year, dt.month, dt.day, dt.hour, dt.minute)
-    logFile = open(os.path.join(dir, "{}_{}.log".format(baseName, dateString)), "w")
+    def __init__(self):
+        self.logFile = None
+        self.logDir = None
+        self.ensureLogPath()
 
+    def startService(self):
+        service.Service.startService(self)
+        self.openNewLogFile()
 
-# Function to log events
-def logEvent(line):
-	global logFile
-	if logFile:
-		dateString = datetime.datetime.now().isoformat(' ')[:19]
-		logFile.write("{} {}\n".format(dateString, line))
-		logFile.flush()
-	else:
-		openNewLogFile()
-		logEvent(line)
+    def stopService(self):
+        service.Service.stopService(self)
+        if self.logFile is not None:
+            self.logFile.close()
 
+    def ensureLogPath(self):
+        self.logDir = os.path.expanduser("~/logs/")
+        if not os.path.exists(self.logDir):
+            os.mkdir(self.logDir)
 
-# this connects the protocol to a server runing on port 1025
-def main():
-
-    # get cage name from command line
-    if len(sys.argv)>1:
-        cageName = sys.argv[1]
-        # clean up cage name
-        rx = re.compile('\W+')
-        cageName = rx.sub(' ', sys.argv[1]).strip()
-        if cageName:
-            ConditioningControlClient.cageName = cageName
+    def openNewLogFile(self):
+        if self.logFile:
+            if not self.logFile.closed:
+                logFile.close()
+        baseName = ConditioningControlClient.cageName
+        dt = datetime.datetime.now()
+        timestamp = generateTimestamp()
+        self.logFile = open(os.path.join(self.logDir, "{}_{}.log".format(baseName, timestamp )), "w")
+        
+    # Function to log events
+    def writeToLog(self, line):
+        if not self.logFile:
+            self.openLogFile()
+        self.logFile.write('{} {}\n'.format(generateDateString(), line))
+        self.logFile.flush()
 
 
-    # setup connection to server
-    f = CageConnectionFactory()
-    reactor.connectTCP(IP_ADDR, IP_PORT, f)
+# Functions to generate human-readable dates
+def generateDateString():
+    return datetime.datetime.now().isoformat(' ')[:19]
 
-    # setup connection to teensy
-    if TEENSY_DEV:
-        f2 = TeensyConnectionFactory()
-        f2.conditioningClientFactory = f;
-        protocol = f2.buildProtocol(None)
-        deviceName = TEENSY_DEV
-        port = SerialPort(protocol, deviceName, reactor)
-        # f.teensyFactory = f2
+def generateTimestamp():
+    now = datetime.datetime.now()
+    return "{:04}{:02}{:02}_{:02}{:02}".format(
+        now.year, now.month, now.day, now.hour, now.minute)
 
-    openNewLogFile()
+# Gets the teensy's addr
+def getTeensyDev():
+    teensy = None
+    if sys.platform == "linux2":
+        devices = glob.glob("/dev/serial/by-path/*usb*")
+        if devices:
+            teensy = devices[0]
+    # for debugging on a mac:
+    elif sys.platform == "darwin":
+        devices = glob.glob('/dev/tty.usb*')
+        if devices:
+            teensy = devices[0]
+    return teensy
 
-    reactor.run()
+# This should all be in a .tac file.  For now its just going to sit here.
 
-# this only runs if the module was *not* imported
-if __name__ == '__main__':
-    main()
+# get cage name
+cageName = socket.gethostname()
+if cageName:
+    ConditioningControlClient.cageName = cageName
+
+# Create a master service to hold all functional services
+masterService = service.MultiService()
+
+# set up a logging service
+loggingService = LoggingService()
+
+# setup service to connect to server
+cageFactory = CageConnectionFactory(loggingService)
+cageService = internet.TCPClient(IP_ADDR, IP_PORT, cageFactory)
+
+# setup teensy service
+teensyFactory = TeensyConnectionFactory(loggingService)
+teensyDevice = getTeensyDev()
+teensyService = TeensyService(teensyFactory, teensyDevice)
+
+# Add cage and teensy services to the master service
+loggingService.setServiceParent(masterService)
+cageService.setServiceParent(masterService)
+teensyService.setServiceParent(masterService)
+
+# Create an application. This is used by the twistd fcn
+application = service.Application("Cage Client")
+
+# Attach the master service to the application
+masterService.setServiceParent(application)

@@ -16,7 +16,7 @@ syncToMacThenServer() {
 }
 
 syncToMacOnly() {
-    rsync -aqz --remove-source-files --log-file=$log rsync -aqz ~/timelapse/*.jpg hccworkstation@$macWorkstationIP:~/timelapses/$HOSTNAME
+    rsync -aqz --remove-source-files --log-file=$log ~/timelapse/*.jpg ccws@$macWorkstationIP:~/timelapses/$HOSTNAME
 }
 
 # Automation of sync commands, check appropriate directories
@@ -39,6 +39,7 @@ syncImages() {
         syncToMacOnly
      fi
 }
+
 
 # Sync logs to server
 syncLogs() {
