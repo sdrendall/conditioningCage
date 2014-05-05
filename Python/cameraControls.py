@@ -14,7 +14,6 @@ def formatLogString(*words):
 
 def generateDateString():
     return dt.datetime.now().isoformat(' ')[:19]
-    
 
 def generateTimestamp():
     now = dt.datetime.now()
@@ -237,7 +236,10 @@ class Timelapse(CameraState):
         # Cancel the deferredStop if it's running
         self.cancelDeferredStop()
         self.camera.close()
-        self['loopingCall'].stop()
+        try:
+            self['loopingCall'].stop()
+        except:
+            pass
 
     def queue(self, delay):
         # queues a timelapse to be started after delay
