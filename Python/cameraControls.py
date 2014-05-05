@@ -270,7 +270,7 @@ class Timelapse(CameraState):
     def captureImage(self):
         filename = "~/timelapse/{cageName}_{dateTime}_%05d.jpg" % self.getNextImageNumber()
         filename = filename.format(**self)
-        self.camera.capture(filename, resize=(self['width'],self['height']), quality=self['quality'])
+        self.camera.capture(filename, resize=(self['width'],self['height']), quality=self['jpegQuality'])
 
     def getNextImageNumber(self):
         if not 'picNo' in self:
