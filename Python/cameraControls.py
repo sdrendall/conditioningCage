@@ -187,7 +187,7 @@ class Camera(object):
             self.stopTimelapse()
         # Cancel callLater and start timelapse
         self.deferredTimelapse.cancelDeferredStart()
-        self.deferredTimelapse.start()
+        self.deferredTimelapse.queue(1) ### TODO: Return a deferred
         # rerefrence deferredTimelapse as activeTimelapse
         self.activeTimelapse, self.deferredTimelapse = self.deferredTimelapse, None
 
@@ -236,6 +236,8 @@ class Timelapse(CameraState):
         # Cancel the deferredStop if it's running
         self.cancelDeferredStop()
         self.camera.close()
+        # Cancel deferredStart -- until Camera.restartDeferredTimelapse returns a deferred
+        self.cancelDeferredStart()
         try:
             self['loopingCall'].stop()
         except:
