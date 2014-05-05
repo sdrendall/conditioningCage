@@ -1,3 +1,4 @@
 #!/bin/bash
 
-twistd --python ~/code/conditioningCage/Python/CageController.py
+cd ~/code/conditioningCage/Python/
+twistd --python CageController.py
