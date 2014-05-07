@@ -1,3 +1,4 @@
 #!/bin/bash
 
-twistd --nodaemon --python ~/code/conditioningCage/Python/CageController.py
+cd ~/code/conditioningCage/Python/
+twistd --nodaemon --python CageController.py

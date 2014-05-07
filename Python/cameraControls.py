@@ -14,7 +14,6 @@ def formatLogString(*words):
 
 def generateDateString():
     return dt.datetime.now().isoformat(' ')[:19]
-    
 
 def generateTimestamp():
     now = dt.datetime.now()
@@ -188,7 +187,7 @@ class Camera(object):
             self.stopTimelapse()
         # Cancel callLater and start timelapse
         self.deferredTimelapse.cancelDeferredStart()
-        self.deferredTimelapse.start()
+        self.deferredTimelapse.queue(1) ### TODO: Return a deferred
         # rerefrence deferredTimelapse as activeTimelapse
         self.activeTimelapse, self.deferredTimelapse = self.deferredTimelapse, None
 
@@ -237,7 +236,12 @@ class Timelapse(CameraState):
         # Cancel the deferredStop if it's running
         self.cancelDeferredStop()
         self.camera.close()
-        self['loopingCall'].stop()
+        # Cancel deferredStart -- until Camera.restartDeferredTimelapse returns a deferred
+        self.cancelDeferredStart()
+        try:
+            self['loopingCall'].stop()
+        except:
+            pass
 
     def queue(self, delay):
         # queues a timelapse to be started after delay
@@ -268,7 +272,8 @@ class Timelapse(CameraState):
     def captureImage(self):
         filename = "~/timelapse/{cageName}_{dateTime}_%05d.jpg" % self.getNextImageNumber()
         filename = filename.format(**self)
-        self.camera.capture(filename, resize=(self['width'],self['height']), quality=self['quality'])
+        filename = os.path.expanduser(filename)
+        self.camera.capture(filename, resize=(self['width'],self['height']), quality=self['jpegQuality'])
 
     def getNextImageNumber(self):
         if not 'picNo' in self:
