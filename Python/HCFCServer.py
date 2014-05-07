@@ -47,8 +47,8 @@ class PiCoordinationProtocol(basic.LineReceiver):
                 # should never get here
                 pass
             # set time on cage
-            uDate = sp.check_output('date "+%m%d%H%M%Y.%S"', shell=True)
-            self.factory.setParameter("Date", uDate, cageId=self.id)
+            #uDate = sp.check_output('date "+%m%d%H%M%Y.%S"', shell=True)
+            #self.factory.setParameter("Date", uDate, cageId=self.id)
 
         elif line.startswith("[DEBUG] "):
             # send debug info straight to stdout
