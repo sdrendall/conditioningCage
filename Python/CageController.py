@@ -228,16 +228,16 @@ class CageConnectionFactory(protocol.ClientFactory):
         return p
 
     def clientConnectionFailed(self, connector, reason):
-        print "Connection failed!"
-        self.reconnect()
+        #print "Connection failed!"
+        from twisted.internet import reactor
+        reactor.callLater(1, self.reconnect)
 
     def clientConnectionLost(self, connector, reason):
         print "Connection lost!"
         self.reconnect()
 
     def reconnect(self):
-        time.sleep(1)
-        print "Reconnecting..."
+        #print "Reconnecting..."
         from twisted.internet import reactor
         reactor.connectTCP(IP_ADDR, IP_PORT, self)
 
