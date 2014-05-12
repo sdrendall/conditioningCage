@@ -69,7 +69,7 @@ class Camera(object):
             'cageName': socket.gethostname(),
             'width': 854,
             'height': 480,
-            'timestamp': generateTimestamp(),
+            'dateTime': generateTimestamp(),
             'jpegQuality': 50
     }
 
@@ -83,7 +83,7 @@ class Camera(object):
             'height': 740,
             'fps': 30,
             'bitrate': 3000000,
-            'timestamp': generateTimestamp(),
+            'dateTime': generateTimestamp(),
             'outputPath': None 
     }
 
@@ -221,6 +221,8 @@ class Timelapse(CameraState):
     def start(self):
         # Instantiate a new camera
         self.camera = picamera.PiCamera()
+        self.camera.color_effects= (128, 128) # Grayscale
+        self.camera.exif_tags['ImageUniqueID'] = "{}_{}".format(socket.gethostname(), self['dateTime'])
         # Remove queued starts or stops
         self.cancelDeferredStart()
 
