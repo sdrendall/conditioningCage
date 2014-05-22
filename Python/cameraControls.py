@@ -96,6 +96,7 @@ class Camera(object):
 
 
     def startVideo(self, params):
+        from twisted.internet import reactor
         # Update Parameters
         vidParams = mergeDicts(self.defaultVideoParams, params)
         # Check for existing timelapse
@@ -105,6 +106,10 @@ class Camera(object):
         if self.activeVideo is not None:
             print "Video Already in Progress!"
             pprint.pprint(self.activeVideo)
+            print "Killing Active Video!"
+            self.stopVideo()
+            # Wait a second to allow camera resources to become available
+            reactor.callLater(1, self.startVideo, params)
             return
         # Send command
         sendVideoCommand(vidParams)
@@ -113,7 +118,6 @@ class Camera(object):
         # Store start time
         vidParams['startTime'] = dt.datetime.now()
         # Stop the video at the end of its duration
-        from twisted.internet import reactor
         vidParams['deferredStop'] = reactor.callLater(vidParams['duration']/1000, self.stopVideo)
         # Store vid parameters
         self.activeVideo = Video(vidParams)
@@ -305,8 +309,7 @@ def sendVideoCommand(p):
 
     commandString = commandString.format(**p)
     print commandString
-    # make sure the camera isn't being used
-    raspikill()
+    # Send off the start command
     sp.Popen(commandString, shell=True)
 
 def raspikill():
