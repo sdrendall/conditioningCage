@@ -25,7 +25,7 @@ pushd ~/code/conditioningCage/bashScripts
 for client in nannyCamClient cageClient;
 do
     chmod 755 $client
-    sudo cp $client /usr/bin
+    sudo ln $client /usr/bin
 done
 popd
 
