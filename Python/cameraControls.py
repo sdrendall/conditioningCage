@@ -65,7 +65,7 @@ class Camera(object):
 
     defaultTLParams = {
             'interval': 10*1000,
-            'duration': 7*24*60*60*1000,
+            'duration': 5*24*60*60*1000,
             'cageName': socket.gethostname(),
             'width': 854,
             'height': 480,
@@ -128,7 +128,7 @@ class Camera(object):
     def startTimelapse(self, params):
         # Update Parameters
         tlParams = mergeDicts(self.defaultTLParams, params)
-        # Check for existing timelapses
+        # Check for and stop existing timelapses
         if self.activeTimelapse is not None:
             self.stopTimelapse()
         # Throw out a queued timelapse if another one is to be started
@@ -159,8 +159,8 @@ class Camera(object):
         if self.activeVideo is not None:
             try:
                 self.activeVideo['deferredStop'].cancel()
-            except AssertionError:
-                pass
+            except AssertionError, e:
+                print e
             self.activeVideo = None
         # Kill video processes
         sp.Popen('killall raspivid', shell=True)
@@ -192,22 +192,14 @@ class Camera(object):
         # Stop ongoing timelapse
         if self.activeTimelapse is not None:
             self.stopTimelapse()
-        # Cancel callLater and start timelapse
-        self.deferredTimelapse.cancelDeferredStart()
+        # Queue the timelapse (give the camera hardware time to free up)
         self.deferredTimelapse.queue(1) ### TODO: Return a deferred
         # rerefrence deferredTimelapse as activeTimelapse
         self.activeTimelapse, self.deferredTimelapse = self.deferredTimelapse, None
 
     def stopTimelapse(self):
         if self.activeTimelapse is not None:
-            try:
-                self.activeTimelapse['deferredStop'].cancel()
-            except AssertionError:
-                pass
-            try:
-                self.activeTimelapse.stop()
-            except AssertionError:
-                pass
+            self.activeTimelapse.stop()
             self.activeTimelapse = None
         # Log
         self.logger.writeToLog('stopTL')
@@ -227,16 +219,12 @@ class Timelapse(CameraState):
     
     def start(self):
         # Instantiate a new camera
-        self.camera = picamera.PiCamera()
-        self.camera.color_effects= (128, 128) # Grayscale
-        self.camera.exif_tags['ImageUniqueID'] = "{}_{}".format(socket.gethostname(), self['dateTime'])
+        self.initializeCamera():
         # Remove queued starts or stops
         self.cancelDeferredStart()
-
         # Start a Looping call of raspistills
         self['loopingCall'] = LoopingCall(self.captureImage)
         self['loopingCall'].start(self['interval']/1000)
-
         # Schedule an ending
         from twisted.internet import reactor
         self['deferredStop'] = reactor.callLater(self['duration'], self.stop)
@@ -244,39 +232,41 @@ class Timelapse(CameraState):
     def stop(self):
         # Cancel the deferredStop if it's running
         self.cancelDeferredStop()
-        self.camera.close()
+        # Stop the Timelapse
+        self.stopLoopingCall()
         # Cancel deferredStart -- until Camera.restartDeferredTimelapse returns a deferred
         self.cancelDeferredStart()
-        try:
-            self['loopingCall'].stop()
-        except AssertionError:
-            pass
+        # Close the camera
+        self.camera.close()
 
     def queue(self, delay):
         # queues a timelapse to be started after delay
-        # cancel the deferredStart if it's running
-        try:
-            self.stop()
-        except AssertionError:
-            pass
+        # stop timelapse, and cancel all callLaters
+        self.stop()
         from twisted.internet import reactor
         self['deferredStart'] = reactor.callLater(delay, self.start)
 
+    def stopLoopingCall(self):
+        if 'loopingCall' in self:
+            if self['loopingCall'].running:
+                self['loopingCall'].stop()
+
     def cancelDeferredStop(self):
         if 'deferredStop' in self:
-            try:
+            if self['deferredStop'].active():
                 self['deferredStop'].cancel()
-            except AssertionError:
-                pass
             del self['deferredStop']
 
     def cancelDeferredStart(self):
         if 'deferredStart' in self:
-            try:
+            if self['deferredStart'].active():
                 self['deferredStart'].cancel()
-            except AssertionError:
-                pass
             del self['deferredStart']
+
+    def initializeCamera(self):
+        self.camera = picamera.PiCamera()
+        self.camera.color_effects= (128, 128) # Grayscale
+        self.camera.exif_tags['ImageUniqueID'] = "{}_{}".format(socket.gethostname(), self['dateTime'])
 
     def captureImage(self):
         filename = "~/timelapse/{cageName}_{dateTime}_%05d.jpg" % self.getNextImageNumber()
