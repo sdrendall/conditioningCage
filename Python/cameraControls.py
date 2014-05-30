@@ -219,7 +219,7 @@ class Timelapse(CameraState):
     
     def start(self):
         # Instantiate a new camera
-        self.initializeCamera():
+        self.initializeCamera()
         # Remove queued starts or stops
         self.cancelDeferredStart()
         # Start a Looping call of raspistills
