@@ -135,6 +135,7 @@ class ConditioningControlClient(basic.LineReceiver):
                 savePath = os.path.expanduser("~/fc_videos/")
                 if not os.path.exists(savePath):
                     os.mkdir(savePath)
+                self.logger.writeToLog("startFC")
 
                 # Compile parameters
                 videoParams = {
@@ -179,7 +180,7 @@ class ConditioningControlClient(basic.LineReceiver):
                 timelapseParams = {
                 'cageName': socket.gethostname(),
                 'dateTime': generateTimestamp(),
-                'duration': 7*24*60*60*1000,
+                'duration': 5*24*60*60*1000,
                 'interval': 10000
                 }
                 self.camera.startTimelapse(timelapseParams)

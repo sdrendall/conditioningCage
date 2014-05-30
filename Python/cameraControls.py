@@ -87,12 +87,15 @@ class Camera(object):
             'outputPath': None 
     }
 
-    def __init__(self, logger=Logger()):
+    def __init__(self, logger=None):
         self.activeTimelapse = None
         self.deferredTimelapse = None
         self.activeVideo = None
         # Set logger object
-        self.logger = logger
+        if logger is not None:
+            self.logger = logger
+        else:
+            self.logger = Logger()
 
 
     def startVideo(self, params):
@@ -138,11 +141,11 @@ class Camera(object):
         if self.activeVideo is not None:
             # if a video is running, start the timelapse when it finishes
             vidTimeRemaining = self.activeVideo.secondsRemaining()
-            if vidTimeRemaining < 0:
-                self.stopVideo()
-            else:
-                self.deferTimelapse(timelapse, 5 + vidTimeRemaining)
+            if vidTimeRemaining > 0:
+                self.deferTimelapse(timelapse, vidTimeRemaining + 1)
                 return
+            else:
+                self.stopVideo()
         # Start timelapse
         timelapse.start()
         # Write to log
@@ -156,7 +159,7 @@ class Camera(object):
         if self.activeVideo is not None:
             try:
                 self.activeVideo['deferredStop'].cancel()
-            except:
+            except AssertionError:
                 pass
             self.activeVideo = None
         # Kill video processes
@@ -199,11 +202,11 @@ class Camera(object):
         if self.activeTimelapse is not None:
             try:
                 self.activeTimelapse['deferredStop'].cancel()
-            except:
+            except AssertionError:
                 pass
             try:
                 self.activeTimelapse.stop()
-            except:
+            except AssertionError:
                 pass
             self.activeTimelapse = None
         # Log
@@ -246,7 +249,7 @@ class Timelapse(CameraState):
         self.cancelDeferredStart()
         try:
             self['loopingCall'].stop()
-        except:
+        except AssertionError:
             pass
 
     def queue(self, delay):
@@ -254,7 +257,7 @@ class Timelapse(CameraState):
         # cancel the deferredStart if it's running
         try:
             self.stop()
-        except:
+        except AssertionError:
             pass
         from twisted.internet import reactor
         self['deferredStart'] = reactor.callLater(delay, self.start)
@@ -263,7 +266,7 @@ class Timelapse(CameraState):
         if 'deferredStop' in self:
             try:
                 self['deferredStop'].cancel()
-            except:
+            except AssertionError:
                 pass
             del self['deferredStop']
 
@@ -271,7 +274,7 @@ class Timelapse(CameraState):
         if 'deferredStart' in self:
             try:
                 self['deferredStart'].cancel()
-            except:
+            except AssertionError:
                 pass
             del self['deferredStart']
 

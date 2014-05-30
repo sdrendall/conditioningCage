@@ -46,7 +46,7 @@ if [ ! -d "~/.ssh"]
 fi
 cat pubRsaKey_sam >> ~/.ssh/authorized_keys
 cat pubRsaKey_hccws >> ~/.ssh/authorized_keys
-popd   
+popd
 
 # FIGURE OUT HOW TO ADD HMS MIRRORS FOR APTITUDE
 
