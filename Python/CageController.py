@@ -23,11 +23,10 @@ anima = "10.200.0.39"
 # IP Addresses to search for server and to stream video to respectively
 IP_ADDR = ccServer
 IP_PORT = 1025
-IP_ADDR_VIDEO = IP_ADDR 
+IP_ADDR_VIDEO = IP_ADDR
 IP_PORT_VIDEO = 5001
 
 # Determine IP address of controller
-# (for deubgging, connect to Ofer's machine if on Warren Alpert subnet)
 MY_IP = ""
 try:
     print("trying ipconfig...")
@@ -51,11 +50,12 @@ except:
         pass
 print("My IP: " + MY_IP)
 sys.stdout.flush()
-if re.match(r"10.119.",MY_IP):
-    print("decided to connect to Ofer's machine!")
-    sys.stdout.flush()
-    IP_ADDR = "10.119.88.15" # Ofer's machine is 10.119.88.15
-    IP_ADDR_VIDEO = "10.119.88.15" # Ofer's machine is 10.119.88.15
+# (for deubgging, connect to Ofer's machine if on Warren Alpert subnet)
+#if re.match(r"10.119.",MY_IP):
+#    print("decided to connect to Ofer's machine!")
+#    sys.stdout.flush()
+#    IP_ADDR = "10.119.88.15" # Ofer's machine is 10.119.88.15
+#    IP_ADDR_VIDEO = "10.119.88.15" # Ofer's machine is 10.119.88.15
 
 
 TEENSY_BAUD = 9600
