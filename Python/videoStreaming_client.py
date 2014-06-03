@@ -4,9 +4,31 @@ import picamera
 def echo(line):
     print line
 
-class VideoStreamingProtocol(protocol.Protocol):
+class RaspiVidProtocol(protocol.ProcessProtocol):
 
-    camera = picamera.PiCamera()
+    def __init__(self, streamProto):
+        self.streamingProtocol = streamProto
+
+    def outReceived(data):
+        self.streamingProtocol.sendData(data)
+
+    def errReceived(data):
+        print 'err Received!'
+        print data
+
+    def processExited(self, status):
+        print 'Process Exited!'
+        status.printTraceback()        
+
+
+class VideoStreamingProtocol(protocol.Protocol):
+    rpiVidArgs = ['-t 60000',
+    '-fps', '30',
+    '-cfx', '128:128',
+    '-b', '3000000',
+    '-w', '1280',
+    '-h', '740']
+    rpiVidProtocol = None
 
     def connectionMade(self):
         from twisted.internet import reactor
@@ -20,13 +42,20 @@ class VideoStreamingProtocol(protocol.Protocol):
         self.stopRecording()
 
     def startRecording(self):
-        self.camera.start_recording(self.transport, format='h264', bitrate=3000000)
+        from twisted.internet import reactor
+        reactor.spawnProcess(self.rpiVidProtocol, '/usr/bin/raspivid', args=self.rpiVidArgs, env=os.environ)
+        #self.camera.start_recording(self.transport, format='h264', bitrate=3000000)
 
     def stopRecording(self):
         self.camera.stop_recording()
 
 class VideoStreamingFactory(protocol.ClientFactory):
     protocol = VideoStreamingProtocol
+
+    def buildProtocol(self, addr):
+        p = protocol.ClientFactory.buildProtocol(self, addr)
+        p.rpiVidProtocol = RaspiVidProtocol()
+        return p
 
 def main():
     from twisted.internet import reactor
