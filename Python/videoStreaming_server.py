@@ -1,4 +1,5 @@
 from twisted.internet import protocol
+import os
 
 class MplayerProtocol(protocol.ProcessProtocol):
 
@@ -6,28 +7,37 @@ class MplayerProtocol(protocol.ProcessProtocol):
         self.vidProtocol = vidProt
 
     def writeData(self, data):
-        print "writing to mplayer...."
+        #print "writing to vlc...."
         self.transport.write(data)
+        self.vidProtocol.outFile.write(data)
 
     def inConnectionLost(self):
         # Close socket
         self.vidProtocol.transport.loseConnection()
 
+    def processExited(self, status):
+        print 'Process Exited!'
+        status.printTraceback()        
+
 
 class VideoReceivingProtocol(protocol.Protocol):
     mpArgs = None
     mpProtocol = None
+    outFile = open('/home/sam/test.h264', 'w')
 
     def connectionMade(self):
         self.openMplayer()
 
     def openMplayer(self):
         from twisted.internet import reactor
-        reactor.spawnProcess(self.mpProtocol, '/usr/bin/mplayer', args=self.mpArgs)
+        reactor.spawnProcess(self.mpProtocol, '/usr/bin/vlc', args=self.mpArgs, usePTY=True, env=os.environ)
 
     def dataReceived(self, data):
-        print "Received %d bytes of data!" % len(data)
+        #print "Received %d bytes of data!" % len(data)
         self.mpProtocol.writeData(data)
+
+    def connectionLost(self, reason):
+        print 'Connection Lost!'
 
 
 class VideoReceivingFactory(protocol.ServerFactory):
@@ -35,7 +45,7 @@ class VideoReceivingFactory(protocol.ServerFactory):
 
     def buildProtocol(self, addr):
         p = protocol.ServerFactory.buildProtocol(self, addr)
-        p.mpArgs = '-fps 31 -cache 1024 -'.split()
+        p.mpArgs = ['-']
         p.mpProtocol = MplayerProtocol(p)
         return p
 

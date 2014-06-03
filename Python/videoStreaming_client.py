@@ -11,16 +11,16 @@ class VideoStreamingProtocol(protocol.Protocol):
     def connectionMade(self):
         from twisted.internet import reactor
         print "Connection Made!"
-        print "Recording in 5 seconds....."
-        reactor.callLater(5, self.startRecording)
-        for i in range(1,5):
-            reactor.callLater(i, echo, 5-i)
+        print "Recording in 3 seconds....."
+        reactor.callLater(3, self.startRecording)
+        for i in range(1,3):
+            reactor.callLater(i, echo, 3-i)
 
     def connectionLost(self, reason):
         self.stopRecording()
 
     def startRecording(self):
-        self.camera.start_recording(self.transport, format='h264')
+        self.camera.start_recording(self.transport, format='h264', bitrate=3000000)
 
     def stopRecording(self):
         self.camera.stop_recording()
