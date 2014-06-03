@@ -14,13 +14,13 @@ class VideoStreamingProtocol(protocol.Protocol):
         print "Recording in 5 seconds....."
         reactor.callLater(5, self.startRecording)
         for i in range(1,5):
-            reactor.callLater(i, echo, i-1)
+            reactor.callLater(i, echo, 5-i)
 
     def connectionLost(self, reason):
         self.stopRecording()
 
     def startRecording(self):
-        self.camera.start_recording(self.transport, format='h264', quantization=23)
+        self.camera.start_recording(self.transport, format='h264')
 
     def stopRecording(self):
         self.camera.stop_recording()
