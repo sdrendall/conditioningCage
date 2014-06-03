@@ -42,6 +42,9 @@ class VideoStreamingProtocol(protocol.Protocol):
         for i in range(1,3):
             reactor.callLater(i, echo, 3-i)
 
+    def sendData(self, data):
+        self.transport.write(data)
+
     def connectionLost(self, reason):
         self.stopRecording()
 
