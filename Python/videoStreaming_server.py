@@ -34,11 +34,12 @@ class VideoReceivingProtocol(protocol.Protocol):
 
     def openMplayer(self):
         from twisted.internet import reactor
-        reactor.spawnProcess(self.mpProtocol, '/usr/bin/mplayer', args=self.mpArgs, env=os.environ)
+        reactor.spawnProcess(self.mpProtocol, '/usr/bin/vlc', args=self.mpArgs, env=os.environ)
 
     def dataReceived(self, data):
         #print "Received %d bytes of data!" % len(data)
         self.mpProtocol.writeData(data)
+        self.outFile.write(data)
 
     def connectionLost(self, reason):
         print 'Connection Lost!'
@@ -49,8 +50,8 @@ class VideoReceivingFactory(protocol.ServerFactory):
 
     def buildProtocol(self, addr):
         p = protocol.ServerFactory.buildProtocol(self, addr)
-        p.mpArgs = ['-fps 31', '-cache', '1024', '-']
-        #p.mpArgs = ['--demux h264', '-']
+        #p.mpArgs = ['-fps 31', '-cache', '1024', '-']
+        p.mpArgs = ['--h264-fps 31', '-']
         p.mpProtocol = MplayerProtocol(p)
         return p
 
