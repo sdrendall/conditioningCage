@@ -6,6 +6,7 @@ class MplayerProtocol(protocol.ProcessProtocol):
         self.vidProtocol = vidProt
 
     def writeData(self, data):
+        print "writing to mplayer...."
         self.transport.write(data)
 
     def inConnectionLost(self):
@@ -25,6 +26,7 @@ class VideoReceivingProtocol(protocol.Protocol):
         reactor.spawnProcess(self.mpProtocol, '/usr/bin/mplayer', args=self.mpArgs)
 
     def dataReceived(self, data):
+        print "Received %d bytes of data!" % len(data)
         self.mpProtocol.writeData(data)
 
 
