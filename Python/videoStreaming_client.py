@@ -1,5 +1,6 @@
 from twisted.internet import protocol
-import picamera
+import os 
+#import picamera
 
 def echo(line):
     print line
@@ -9,10 +10,10 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
     def __init__(self, streamProto):
         self.streamingProtocol = streamProto
 
-    def outReceived(data):
+    def outReceived(self, data):
         self.streamingProtocol.sendData(data)
 
-    def errReceived(data):
+    def errReceived(self, data):
         print 'err Received!'
         print data
 
@@ -47,14 +48,14 @@ class VideoStreamingProtocol(protocol.Protocol):
         #self.camera.start_recording(self.transport, format='h264', bitrate=3000000)
 
     def stopRecording(self):
-        self.camera.stop_recording()
+        self.rpiVidProtocol.transport.signalProcess('KILL')
 
 class VideoStreamingFactory(protocol.ClientFactory):
     protocol = VideoStreamingProtocol
 
     def buildProtocol(self, addr):
         p = protocol.ClientFactory.buildProtocol(self, addr)
-        p.rpiVidProtocol = RaspiVidProtocol()
+        p.rpiVidProtocol = RaspiVidProtocol(p)
         return p
 
 def main():
