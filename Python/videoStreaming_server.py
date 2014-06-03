@@ -51,7 +51,7 @@ class VideoReceivingFactory(protocol.ServerFactory):
     def buildProtocol(self, addr):
         p = protocol.ServerFactory.buildProtocol(self, addr)
         #p.mpArgs = ['-fps 31', '-cache', '1024', '-']
-        p.mpArgs = ['--h264-fps 31', '-']
+        p.mpArgs = ['vlc', '--demux', 'h264', '--h264-fps', '31', '-']
         p.mpProtocol = MplayerProtocol(p)
         return p
 

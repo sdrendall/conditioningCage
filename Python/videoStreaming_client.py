@@ -25,14 +25,14 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
 
 
 class VideoStreamingProtocol(protocol.Protocol):
-    rpiVidArgs = ('raspiVid'
-        '-t', '60000',
-        '-fps', '30',
-        '-cfx', '128:128',
-        '-b', '3000000',
-        '-w', '1280',
-        '-h', '740',
-        '-o', '-')
+    rpiVidArgs = ['raspiVid'
+            '-t', '60000',
+            '-fps', '30',
+            '-cfx', '128:128',
+            '-b', '3000000',
+            '-w', '1280',
+            '-h', '740',
+            '-o', '-']
     rpiVidProtocol = None
 
     def connectionMade(self):
