@@ -11,6 +11,8 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
         self.streamingProtocol = streamProto
 
     def outReceived(self, data):
+        print 'Received %d bytes' % len(data)
+        print 'Writing to socket...'
         self.streamingProtocol.sendData(data)
 
     def errReceived(self, data):
@@ -28,7 +30,8 @@ class VideoStreamingProtocol(protocol.Protocol):
     '-cfx', '128:128',
     '-b', '3000000',
     '-w', '1280',
-    '-h', '740']
+    '-h', '740',
+    '-o', '-']
     rpiVidProtocol = None
 
     def connectionMade(self):
