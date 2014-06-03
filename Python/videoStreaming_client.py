@@ -1,6 +1,9 @@
 from twisted.internet import protocol
 import picamera
 
+def echo(line):
+    print line
+
 class VideoStreamingProtocol(protocol.Protocol):
 
     camera = picamera.PiCamera()
@@ -11,7 +14,7 @@ class VideoStreamingProtocol(protocol.Protocol):
         print "Recording in 5 seconds....."
         reactor.callLater(5, self.startRecording)
         for i in range(1,5):
-            reactor.callLater(i, print, i-1)
+            reactor.callLater(i, echo, i-1)
 
     def connectionLost(self, reason):
         self.stopRecording()
