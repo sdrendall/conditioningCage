@@ -25,7 +25,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
 
 
 class VideoStreamingProtocol(protocol.Protocol):
-    rpiVidArgs = ['raspivid ',
+    rpiVidArgs = ['raspivid',
             '-fps', '30',
             '-cfx', '128:128',
             '-b', '3000000',
