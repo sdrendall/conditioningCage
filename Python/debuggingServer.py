@@ -1,6 +1,7 @@
 from twisted.internet import stdio
 from twisted.protocols.basic import LineReceiver
 from twisted.internet.protocol import ServerFactory
+from Camera import mplayerStreamingInterface as msi
 
 import os, sys, datetime
 import subprocess as sp
@@ -112,8 +113,12 @@ class CageServerFactory(ServerFactory):
 def main():
     from twisted.internet import reactor
     factory = CageServerFactory(IoCommandProtocol())
+    streamingFactory = msi.VideoReceivingFactory()
+
+    reactor.listenTCP(5001, streamingFactory)
     reactor.listenTCP(1025, factory)
     stdio.StandardIO(factory.io)
+    
     reactor.run()
 
 if __name__ == '__main__':
