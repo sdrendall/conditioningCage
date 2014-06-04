@@ -140,7 +140,7 @@ class Camera(object):
         self._initiateTimelapse(tlParams)
 
     def stopTimelapse(self):
-        self._terminateActiveTimelapse
+        self._terminateActiveTimelapse()
         self.logger.writeToLog('stopTL')
 
     def overwriteVideoDefaults(self, params):
