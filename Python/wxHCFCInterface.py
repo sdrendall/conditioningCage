@@ -382,7 +382,6 @@ class HCFHControllerWindow(wx.Panel):
             self.displayText("Get Video: No cage selected.")
         else:
             id = self.clientList.GetClientData(n)
-            sp.Popen("nc -l 5001 | mplayer -fps 31 -cache 1024 -", shell=True)
             self.server.runVideo(id)
 
     def setServer(self, server):
