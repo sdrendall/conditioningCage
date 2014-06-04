@@ -182,8 +182,8 @@ class VideoStreamingFactory(protocol.ClientFactory):
     _connectors = {}
     _streamId = 0
 
-    def initiateStreaming(self, params=self.vidParams):
-        self.vidParams = params
+    def initiateStreaming(self, params={}):
+        self.vidParams = mergeDicts(self.vidParams, params)
         # Kill all pending connections
         self.disconnectConnectors()
         # Connect to the server to begin streaming
