@@ -172,7 +172,8 @@ class Camera(object):
 
     def _terminateActiveVideo(self, *args):
         self.activeVideo.stop()
-        self.activeVideo.firedOnRaspividReaping.addBoth(self._derefActiveVideo)
+        # Not all videos are stopped in this fashion, so dereferencing should
+        #  be handled elsewhere
 
     def _derefActiveVideo(self, *args):
         if self.activeVideo is not None:
