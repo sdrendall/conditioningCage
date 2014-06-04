@@ -147,7 +147,7 @@ class Camera(object):
         return mergeDicts(self.defaultVideoParams, params)
 
     def overwriteTimelapseDefaults(self, params):
-        return mergeDicts(self.defaultTLParamsm, params)
+        return mergeDicts(self.defaultTLParams, params)
 
     def _initiateTimelapse(self, params):
         tl = Timelapse(params)

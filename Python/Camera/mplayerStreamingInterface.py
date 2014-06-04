@@ -1,4 +1,4 @@
-from twisted.internet import protocol, fdesc
+from twisted.internet import protocol, fdesc, error
 from twisted.protocols import basic
 import os
 
