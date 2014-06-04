@@ -209,7 +209,7 @@ class VideoStreamingFactory(protocol.ClientFactory):
     def disconnectConnectors(self):
         # disconnect does nothing to disconnected connections
         #  this also serves to clear the _connectors dict
-        for key in self._connectors:
+        for key in self._connectors.keys():
             c = self._connectors.pop(key)
             c.disconnect()
 
