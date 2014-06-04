@@ -101,7 +101,7 @@ class Camera(object):
         # Stop active videos
         if self.activeVideo is not None:
             # Try to start the video again once the active video has stopped
-            self.activeVideo.firedOnRaspividReaping.addBoth(self.startVideo, vidParams)
+            self.activeVideo.firedOnRaspividReaping.addBoth(self.callback_callback_startVideo, params=vidParams)
             self.stopVideo()
             return
         # Videos supercede timelapses
@@ -130,7 +130,7 @@ class Camera(object):
         tlParams = self.overwriteTimelapseDefaults(params)
         # If a video is playing, start timelapse when the video ends
         if self.activeVideo is not None:
-            self.activeVideo.firedOnRaspividReaping.addBoth(self.startTimelapse, tlParams)
+            self.activeVideo.firedOnRaspividReaping.addBoth(self.callback_startTimelapse, tlParams)
             return
         # If a timelapse is active, stop it
         if self.activeTimelapse is not None:
@@ -171,13 +171,20 @@ class Camera(object):
             v.firedOnRaspividReaping.chainDeferred(susTl)
         self.activeVideo = v
 
-    def _terminateActiveVideo(self):
+    def _terminateActiveVideo(self, *args):
         self.activeVideo.stop()
         self.activeVideo.firedOnRaspividReaping.addBoth(self._derefActiveVideo)
 
-    def _derefActiveVideo(self):
+    def _derefActiveVideo(self, *args):
         if self.activeVideo is not None:
             self.activeVideo = None
+
+    def callback_startVideo(self, result, params):
+        self.startVideo(params)
+
+    def callback_startTimelapse(self, result, params):
+        self.startTimelapse(params)
+
 
 
 class CameraState(dict):
