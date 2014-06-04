@@ -135,12 +135,12 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
 
     def convertToMp4(self, path):
         # Insecure, outputPath should be sanitized
-        comStr = "MP4Box -add %s.h264 %s.mp4 -fps 30 &&" \
-                    "rm %s.h264" % path, path, path
+        comStr = "MP4Box -add {}.h264 {}.mp4 -fps 30 &&" \
+                    "rm {}.h264".format(path,path,path)
         subprocess.Popen(comStr, shell=True)
 
-    def callback_convertToMp4(self, result, *args):
-        self.convertToMp4(args[0])
+    def callback_convertToMp4(self, result, path):
+        self.convertToMp4(path)
 
 
 class VideoStreamingProtocol(basic.LineReceiver):
