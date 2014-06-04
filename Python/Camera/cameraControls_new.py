@@ -185,7 +185,6 @@ class Camera(object):
         self.startTimelapse(params)
 
 
-
 class CameraState(dict):
 
     def secondsRemaining(self):
