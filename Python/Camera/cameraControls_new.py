@@ -105,7 +105,7 @@ class Camera(object):
             self.stopVideo()
             return
         # Videos supercede timelapses
-        fireToResumeTL = suspendActiveTimelapse() # None if no active timelapse
+        fireToResumeTL = self.suspendActiveTimelapse() # None if no active timelapse
         # Log the video command
         self.logger.writeToLog(formatLogString('startVid', 'timestamp', vidParams['dateTime']))
         # Handle video creation
