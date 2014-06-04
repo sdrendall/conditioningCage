@@ -76,7 +76,7 @@ class VideoReceivingProtocol(basic.LineReceiver):
         if path is not None:
             try:
                 # Open the file descriptor
-                self.outputFile = open(path)
+                self.outputFile = open(path + '.h264')
                 # Make it nonblocking
                 fdesc.setNonBlocking(self.outputFile.fileno())
             except:
