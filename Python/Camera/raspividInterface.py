@@ -106,7 +106,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
 
     def openOutputFile(self, params):
         if params['outputPath'] is not None:
-            self.outputFile = open(params['outputPath'])
+            self.outputFile = open(params['outputPath'], 'w')
             fdesc.setNonBlocking(self.outputFile)
             self.queueConvertToMp4(params)
 
