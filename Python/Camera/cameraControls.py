@@ -1,6 +1,6 @@
 # Controls for the raspberry pi camera
-# Based on the rapsi* bash API
 import subprocess as sp
+import raspividInterface as rpvI
 import sys, re, time, os, socket, pprint, picamera
 import datetime as dt
 from twisted.internet.task import LoopingCall
@@ -62,6 +62,7 @@ class Logger(object):
 
 # The main event
 class Camera(object):
+    streamingFactory = raspividInterface.VideoStreamingFactory()
 
     defaultTLParams = {
             'interval': 10*1000,
@@ -75,7 +76,7 @@ class Camera(object):
 
     defaultVideoParams = {
             'cageName': socket.gethostname(),
-            'duration': 60000,
+            'duration': 0,
             'stream': False,
             'streamTo': '10.117.33.13',
             'streamPort': 5001,
@@ -101,10 +102,10 @@ class Camera(object):
     def startVideo(self, params):
         from twisted.internet import reactor
         # Update Parameters
-        vidParams = mergeDicts(self.defaultVideoParams, params{}
+        vidParams = mergeDicts(self.defaultVideoParams, params)
         # Check for existing timelapse
         if self.activeTimelapse is not None:
-            self.deferTimelapse(self.activeTimelapse, 5 + vidParams['duration']/1000)
+            self.suspendTimelapse(self.activeTimelapse, 5 + vidParams['duration']/1000)
         # Check for existing video
         if self.activeVideo is not None:
             print "Video Already in Progress!"
@@ -142,7 +143,7 @@ class Camera(object):
             # if a video is running, start the timelapse when it finishes
             vidTimeRemaining = self.activeVideo.secondsRemaining()
             if vidTimeRemaining > 0:
-                self.deferTimelapse(timelapse, vidTimeRemaining + 1)
+                self.suspendTimelapse(timelapse, vidTimeRemaining + 1)
                 return
             else:
                 self.stopVideo()
@@ -169,9 +170,9 @@ class Camera(object):
 
         # Restart deferred timelapses
         if self.deferredTimelapse is not None:
-            self.restartDeferredTimelapse()
+            self.restartSuspendedTimelapse()
 
-    def deferTimelapse(self, timelapse, delay):
+    def suspendTimelapse(self, timelapse, delay):
         # Stop the active timelapse
         if self.activeTimelapse is not None:
             self.stopTimelapse()
@@ -185,7 +186,7 @@ class Camera(object):
         self.deferredTimelapse = timelapse
         self.deferredTimelapse.queue(delay)
 
-    def restartDeferredTimelapse(self):
+    def restartSuspendedTimelapse(self):
         # Return if there isn't a deferred timelapse
         if self.deferredTimelapse is None:
             return
@@ -234,10 +235,13 @@ class Timelapse(CameraState):
         self.cancelDeferredStop()
         # Stop the Timelapse
         self.stopLoopingCall()
-        # Cancel deferredStart -- until Camera.restartDeferredTimelapse returns a deferred
+        # Cancel deferredStart -- until Camera.restartSuspendedTimelapse returns a deferred
         self.cancelDeferredStart()
         # Close the camera
         self.camera.close()
+
+    def suspend(self):
+        pass
 
     def queue(self, delay):
         # queues a timelapse to be started after delay

@@ -10,7 +10,7 @@ import sys, re, time, datetime, os
 import glob
 import socket
 import subprocess as sp
-import cameraControls
+from Camera import cameraControls
 
 from twisted.internet import protocol
 from twisted.protocols import basic
