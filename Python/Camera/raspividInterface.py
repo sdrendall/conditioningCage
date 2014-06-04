@@ -67,7 +67,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
         while self.fireWhenProcessEnds:
             d = self.fireWhenProcessEnds.pop()
             try:
-                d.callback()
+                d.callback(None)
             # This will eventually be called when
             #  the parent factory's currentProcessDeferred 
             #  is cancelled
@@ -124,7 +124,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
         if self.fireWhenOutputFileIsClosed is not None:
             try:
                 d, self.fireWhenOutputFileIsClosed = self.fireWhenOutputFileIsClosed, None
-                d.callback()
+                d.callback(None)
             except defer.AlreadyCalledError:
                 pass
 
