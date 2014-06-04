@@ -130,7 +130,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
 
     def queueConvertToMp4(self, params):
         d = defer.Deferred()
-        d.addCallback(callback_convertToMp4, params['outputPath'])
+        d.addCallback(self.callback_convertToMp4, params['outputPath'])
         self.fireWhenOutputFileIsClosed = d
 
     def convertToMp4(self, path):
