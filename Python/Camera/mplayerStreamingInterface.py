@@ -10,7 +10,7 @@ class MplayerProtocol(protocol.ProcessProtocol):
 
     def openMplayer(self):
         from twisted.internet import reactor
-        reactor.spawnProcess(self, '/usr/bin/mplayer', args=self.mpArgs, env=os.environ)
+        reactor.spawnProcess(self, '/opt/local/bin/mplayer', args=self.mpArgs, env=os.environ)
 
     def writeToMplayer(self, data):
         #print "writing to mplayer...."
