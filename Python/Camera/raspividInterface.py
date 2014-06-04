@@ -33,6 +33,11 @@ def mergeDicts(d1, d2):
         d[key] = value
     return d
 
+# For working around the fact that deferred callback chains
+#  always pass an argument to the first callback
+def eatResult(result):
+    return
+
 class RaspiVidProtocol(protocol.ProcessProtocol):
 
     outputFile = None
@@ -76,6 +81,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
 
     def deferUntilProcessEnds(self):
         d = defer.Deferred()
+        d.addBoth(eatResult)
         self.fireWhenProcessEnds.append(d)
         return d
 
@@ -130,6 +136,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
 
     def queueConvertToMp4(self, params):
         d = defer.Deferred()
+        d.addBoth(eatResult)
         d.addCallback(convertToMp4, params['outputPath'])
         self.fireWhenOutputFileIsClosed = d
 
