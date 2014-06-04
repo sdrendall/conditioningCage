@@ -223,14 +223,14 @@ class Timelapse(CameraState):
 
     camera = None
     
-    def start(self):
+    def start(self, *args):
         # Instantiate a new camera
         self._initializeCamera()
         # Start a Looping call of raspistills
         self['loopingCall'] = LoopingCall(self._captureImage)
         self['loopingCall'].start(self['interval']/1000)
 
-    def stop(self):
+    def stop(self, *args):
         self._stopLoopingCall()
         self.camera.close()
 
