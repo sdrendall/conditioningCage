@@ -159,7 +159,6 @@ class Camera(object):
             tl, self.activeTimelapse = self.activeTimelapse, None
             tl.stop()
 
-
     def _initiateVideo(self, params, susTl=None):
         if params['stream']:
             v = Stream(params)
