@@ -79,7 +79,6 @@ class CageServer(LineReceiver):
     # Cage Commands
 
     def do_startvid(self, *args):
-        sp.Popen("nc -l 5001 | mplayer -fps 31 -cache 1024 -", shell=True)
         self.sendLine('V')
 
     def do_stopvid(self, *args):
