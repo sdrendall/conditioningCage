@@ -187,9 +187,12 @@ class VideoStreamingFactory(protocol.ClientFactory):
         self.vidParams = mergeDicts(self.vidParams, params)
         # Kill all pending connections
         self.disconnectConnectors()
+        # Create a deferred to be referenced by the new protocols
+        #  This deferred is fired when raspivid closes
+        d = self.createNewProcessDeferred()
         # Connect to the server to begin streaming
         self.connectToServer()
-        return self.createNewProcessDeferred()
+        return d
 
     def stopStreaming(self):
         # Alias, for more intuitive use
