@@ -192,12 +192,12 @@ class Video(CameraState):
     firedOnRaspividReaping = None
     rpvProtocol = None
 
-    def start(self):
+    def start(self, *args):
         self.rpvProtocol = rpvI.RaspiVidProtocol(vidParams=self)
         d = self.rpvProtocol.startRecording()
         self.firedOnRaspividReaping = d
 
-    def stop(self):
+    def stop(self, *args):
         self.rpvProtocol.stopRecording()
 
 
@@ -205,11 +205,11 @@ class Stream(Video):
     # Same factory for each Stream
     streamingFactory = rpvI.VideoStreamingFactory()
 
-    def start(self):
+    def start(self, *args):
         d = self.streamingFactory.initiateStreaming(self.copy()) #eww.. the streamingFactory references this arg.  Shouldn't pass self.
         self.firedOnRaspividReaping = d
 
-    def stop(self):
+    def stop(self, *args):
         self.streamingFactory.stopStreaming()
 
 class Timelapse(CameraState):

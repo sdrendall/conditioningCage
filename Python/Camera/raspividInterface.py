@@ -33,11 +33,6 @@ def mergeDicts(d1, d2):
         d[key] = value
     return d
 
-# For working around the fact that deferred callback chains
-#  always pass an argument to the first callback
-def eatResult(result):
-    return
-
 class RaspiVidProtocol(protocol.ProcessProtocol):
 
     outputFile = None
@@ -137,7 +132,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
     def queueConvertToMp4(self, params):
         d = defer.Deferred()
         d.addBoth(eatResult)
-        d.addCallback(convertToMp4, params['outputPath'])
+        d.addCallback(callback_convertToMp4, params['outputPath'])
         self.fireWhenOutputFileIsClosed = d
 
     def convertToMp4(self, path):
@@ -145,6 +140,9 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
         comStr = "MP4Box -add %s.h264 %s.mp4 -fps 30 &&" \
                     "rm %s.h264" % path, path, path
         subprocess.Popen(comStr, shell=True)
+
+    def callback_convertToMp4(self, result, *args):
+        self.convertToMp4(args[0])
 
 
 class VideoStreamingProtocol(basic.LineReceiver):
@@ -180,7 +178,7 @@ class VideoStreamingProtocol(basic.LineReceiver):
         d.addCallback(self.disconnect)
         return d
 
-    def disconnect(self):
+    def disconnect(self, *args):
         self.transport.loseConnection()
 
 class VideoStreamingFactory(protocol.ClientFactory):
@@ -241,6 +239,7 @@ class VideoStreamingFactory(protocol.ClientFactory):
         fireWhenProcessEnds = p.deferUntilProcessEnds()
         fireWhenProcessEnds.chainDeferred(d)
         return p
+
 
 def main():
     from twisted.internet import reactor
