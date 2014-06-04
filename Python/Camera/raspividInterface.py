@@ -62,7 +62,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
     def processEnded(self, status):
         self.fireFireWhenProcessEndsDeferreds()
 
-    def fireFireWhenProcessEndsDeferreds():
+    def fireFireWhenProcessEndsDeferreds(self):
         # Fire all deferreds in fireWhenProcessEnds
         while self.fireWhenProcessEnds:
             d = fireWhenProcessEnds.pop()
@@ -74,7 +74,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
             except defer.AlreadyCalledError:
                 pass
 
-    def deferUntilProcessEnds():
+    def deferUntilProcessEnds(self):
         d = defer.Deferred()
         self.fireWhenProcessEnds.append(d)
         return d
