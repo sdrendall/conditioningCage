@@ -38,7 +38,8 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
     outputFile = None
     fireWhenOutputFileIsClosed = None
 
-    def __init__(self, vidParams=defaults, streamProto=None):
+    def __init__(self, vidParams={}, streamProto=None):
+	vidParams = mergeDicts(defaults, vidParams)
         # Reference the streaming protocol
         self.streamingProtocol = streamProto
         # Set the arguments to call raspivid with
@@ -94,7 +95,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
     def setVidArgs(self, params):
         # Create a list of args from params
         vidArgString = 'raspivid -fps {fps} -cfx 128:128 -b {bitrate} -w {width} -h {height} -t {duration} -o -'
-        vidArgString = vidArgString.format(params)
+        vidArgString = vidArgString.format(**params)
         self.vidArgs = vidArgString.split()
 
     def streamData(self, data):
@@ -215,7 +216,7 @@ class VideoStreamingFactory(protocol.ClientFactory):
 
     def buildProtocol(self, addr):
         p = protocol.ClientFactory.buildProtocol(self, addr)
-        rvp = buildRpvProtocol(p)
+        rvp = self.buildRpvProtocol(p)
         p.rpiVidProtocol = rvp
         return p
 
