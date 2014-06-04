@@ -61,6 +61,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
 
     def processEnded(self, status):
         self.fireFireWhenProcessEndsDeferreds()
+        self.closeOutputFile()
 
     def fireFireWhenProcessEndsDeferreds(self):
         # Fire all deferreds in fireWhenProcessEnds
