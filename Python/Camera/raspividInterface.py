@@ -102,8 +102,6 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
     def streamData(self, data):
         if self.streamingProtocol is not None:
             self.streamingProtocol.sendData(data)
-        else:
-            self.stopRecording()
 
     def openOutputFile(self, params):
         if params['outputPath'] is not None:
