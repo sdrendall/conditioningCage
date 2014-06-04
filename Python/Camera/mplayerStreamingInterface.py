@@ -78,7 +78,7 @@ class VideoReceivingProtocol(basic.LineReceiver):
                 # Open the file descriptor
                 self.outputFile = open(path)
                 # Make it nonblocking
-                fdesc.setNonBlocking(self.outputFile)
+                fdesc.setNonBlocking(self.outputFile.fileno())
             except:
                 print "Warning! Incoming video stream will not save to local file!"
                 self.outputFile = None
@@ -86,7 +86,7 @@ class VideoReceivingProtocol(basic.LineReceiver):
     def writeToFile(self, data):
         if self.outputFile is not None:
             # Write to nonblocking output file descriptor
-            fdesc.writeToFD(self.outputFile, data)
+            fdesc.writeToFD(self.outputFile.fileno(), data)
 
     def closeOutputFile(self):
         if self.outputFile is not None:

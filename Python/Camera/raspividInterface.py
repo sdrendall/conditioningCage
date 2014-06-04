@@ -107,12 +107,12 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
     def openOutputFile(self, params):
         if params['outputPath'] is not None:
             self.outputFile = open(params['outputPath'], 'w')
-            fdesc.setNonBlocking(self.outputFile)
+            fdesc.setNonBlocking(self.outputFile.fileno())
             self.queueConvertToMp4(params)
 
     def writeToFile(self, data):
         if self.outputFile is not None:
-            fdesc.writeToFD(self.outputFile, data)
+            fdesc.writeToFD(self.outputFile.fileno(), data)
 
     def closeOutputFile(self):
         if self.outputFile is not None:
