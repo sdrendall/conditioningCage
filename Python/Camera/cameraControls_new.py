@@ -136,7 +136,7 @@ class Camera(object):
         if self.activeTimelapse is not None:
             self._terminateActiveTimelapse()
         # Log the timelapse start
-        self.logger.writeToLog(formatLogString('startTL','intervalLen',timelapse['interval'],'timestamp',timelapse['dateTime']))
+        self.logger.writeToLog(formatLogString('startTL','intervalLen',tlParams['interval'],'timestamp',tlParams['dateTime']))
         self._initiateTimelapse(tlParams)
 
     def stopTimelapse(self):
