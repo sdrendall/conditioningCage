@@ -152,7 +152,7 @@ class VideoStreamingProtocol(basic.LineReceiver):
         if line == 'ready':
             d = self.startStreaming()
             # disconnect if raspivid is closed, for whatever reason
-            d.addBoth(self.transport.loseConnection)
+            d.addBoth(self.disconnect)
 
     def sendData(self, data):
         self.transport.write(data)
@@ -169,8 +169,11 @@ class VideoStreamingProtocol(basic.LineReceiver):
     def stopStreaming(self):
         # Kill the raspivid process then close the connection
         d = maybeDeferred(self.rpiVidProtocol.stopRecording)
-        d.addCallback(self.transport.loseConnection)
+        d.addCallback(self.disconnect)
         return d
+
+    def disconnect(self):
+        self.transport.loseConnection()
 
 class VideoStreamingFactory(protocol.ClientFactory):
     protocol = VideoStreamingProtocol

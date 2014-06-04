@@ -20,6 +20,9 @@ class MplayerProtocol(protocol.ProcessProtocol):
         # Signal to the client once mplayer has successfully opened
         self.receivingProtocol.enterStreamingMode()
 
+    def processEnded(self, reason):
+        self.receivingProtocol.disconnect()
+
     def errReceived(self, data):
         print '[stderr] mplayer:'
         print data
@@ -83,8 +86,9 @@ class VideoReceivingProtocol(basic.LineReceiver):
         if self.outputFile is not None:
             self.outputFile.close()
 
-
-
+    def disconnect(self):
+        self.transport.loseConnection()
+        
 
 class VideoReceivingFactory(protocol.ServerFactory):
     """ Builds VideoReceivingProtocols after connecting

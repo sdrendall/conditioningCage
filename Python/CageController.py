@@ -10,7 +10,7 @@ import sys, re, time, datetime, os
 import glob
 import socket
 import subprocess as sp
-from Camera import cameraControls
+from Camera import cameraControls_new
 
 from twisted.internet import protocol
 from twisted.protocols import basic
@@ -50,13 +50,6 @@ except:
         pass
 print("My IP: " + MY_IP)
 sys.stdout.flush()
-# (for deubgging, connect to Ofer's machine if on Warren Alpert subnet)
-#if re.match(r"10.119.",MY_IP):
-#    print("decided to connect to Ofer's machine!")
-#    sys.stdout.flush()
-#    IP_ADDR = "10.119.88.15" # Ofer's machine is 10.119.88.15
-#    IP_ADDR_VIDEO = "10.119.88.15" # Ofer's machine is 10.119.88.15
-
 
 TEENSY_BAUD = 9600
 
@@ -64,7 +57,6 @@ global_teensy = None
 global_server = None
 
 current_parameters = {}
-
 
 class ConditioningControlClient(basic.LineReceiver):
 

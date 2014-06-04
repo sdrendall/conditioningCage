@@ -9,9 +9,12 @@ wxreactor.install()
 from twisted.internet import reactor
 import HCFCServer
 
-# inport wx/GUI
+# import wx/GUI
 import wx
 import wxHCFCInterface
+
+# import streaming service
+from Camera import mplayerStreamingInterface
 
 # setup GUI
 app = wx.App(False)
@@ -28,8 +31,10 @@ panel.setServer(server)
 # coordinate wx & Twisted
 reactor.registerWxApp(app)
 
+# create a streaming factory
+mplayerFactory = mplayerStreamingInterface.VideoReceivingFactory()
+
 #setup GUI/reactor
+reactor.listenTCP(5001, mplayerFactory)
 reactor.listenTCP(1025, server)
 reactor.run()
-
-
