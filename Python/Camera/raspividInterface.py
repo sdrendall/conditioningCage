@@ -39,7 +39,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
     fireWhenOutputFileIsClosed = None
 
     def __init__(self, vidParams={}, streamProto=None):
-	vidParams = mergeDicts(defaults, vidParams)
+        vidParams = mergeDicts(defaults, vidParams)
         # Reference the streaming protocol
         self.streamingProtocol = streamProto
         # Set the arguments to call raspivid with
@@ -65,7 +65,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
     def fireFireWhenProcessEndsDeferreds(self):
         # Fire all deferreds in fireWhenProcessEnds
         while self.fireWhenProcessEnds:
-            d = fireWhenProcessEnds.pop()
+            d = self.fireWhenProcessEnds.pop()
             try:
                 d.callback()
             # This will eventually be called when
@@ -213,7 +213,7 @@ class VideoStreamingFactory(protocol.ClientFactory):
     def connectToServer(self):
         from twisted.internet import reactor
         c = reactor.connectTCP(self.vidParams['streamTo'], self.vidParams['streamPort'], self)
-        _connectors[self._streamId] = c
+        self._connectors[self._streamId] = c
         self._streamId += 1
         return c
 

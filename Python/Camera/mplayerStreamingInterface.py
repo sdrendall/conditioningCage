@@ -16,6 +16,12 @@ class MplayerProtocol(protocol.ProcessProtocol):
         #print "writing to mplayer...."
         self.transport.write(data)
 
+    def closeMplayer(self):
+        try:
+            self.transport.signalProcess('KILL')
+        except error.ProcessExitedAlready:
+            pass
+
     def connectionMade(self):
         # Signal to the client once mplayer has successfully opened
         self.receivingProtocol.enterStreamingMode()
