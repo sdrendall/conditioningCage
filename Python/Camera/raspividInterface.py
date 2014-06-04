@@ -112,7 +112,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
 
     def writeToFile(self, data):
         if self.outputFile is not None:
-            fdesc.writeToFC(self.outputFile, data)
+            fdesc.writeToFD(self.outputFile, data)
 
     def closeOutputFile(self):
         if self.outputFile is not None:
