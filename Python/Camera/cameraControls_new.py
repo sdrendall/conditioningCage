@@ -100,8 +100,6 @@ class Camera(object):
         vidParams = self.overwriteVideoDefaults(params)
         # Stop active videos
         if self.activeVideo is not None:
-            # Try to start the video again once the active video has stopped
-            self.activeVideo.firedOnRaspividReaping.addBoth(self.callback_callback_startVideo, params=vidParams)
             self.stopVideo()
             return
         # Videos supercede timelapses

@@ -140,6 +140,14 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
         subprocess.Popen(comStr, shell=True)
 
     def callback_convertToMp4(self, result, path):
+        try:
+            print result
+        except:
+            pass
+        try:
+            print path
+        except:
+            pass
         self.convertToMp4(path)
 
 
