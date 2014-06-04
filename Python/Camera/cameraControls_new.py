@@ -203,7 +203,7 @@ class Video(CameraState):
 
 class Stream(Video):
     # Same factory for each Stream
-    streamingFactory = raspividInterface.VideoStreamingFactory()
+    streamingFactory = rpvI.VideoStreamingFactory()
 
     def start(self):
         d = self.streamingFactory.initiateStreaming(self.copy()) #eww.. the streamingFactory references this arg.  Shouldn't pass self.
