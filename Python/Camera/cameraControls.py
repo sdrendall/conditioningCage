@@ -4,6 +4,7 @@ import raspividInterface as rpvI
 import sys, re, time, os, socket, pprint, picamera
 import datetime as dt
 from twisted.internet.task import LoopingCall
+from twisted.internet import defer
 
 
 # Helper functions
@@ -59,10 +60,8 @@ class Logger(object):
         self.logFile.write('{} {}\n'.format(generateDateString(), line))
         self.logFile.flush()
 
-
 # The main event
 class Camera(object):
-    streamingFactory = raspividInterface.VideoStreamingFactory()
 
     defaultTLParams = {
             'interval': 10*1000,
@@ -90,7 +89,6 @@ class Camera(object):
 
     def __init__(self, logger=None):
         self.activeTimelapse = None
-        self.deferredTimelapse = None
         self.activeVideo = None
         # Set logger object
         if logger is not None:
@@ -98,112 +96,94 @@ class Camera(object):
         else:
             self.logger = Logger()
 
-
-    def startVideo(self, params):
-        from twisted.internet import reactor
-        # Update Parameters
-        vidParams = mergeDicts(self.defaultVideoParams, params)
-        # Check for existing timelapse
-        if self.activeTimelapse is not None:
-            self.suspendTimelapse(self.activeTimelapse, 5 + vidParams['duration']/1000)
-        # Check for existing video
+    def startVideo(self, params={}):
+        vidParams = self.overwriteVideoDefaults(params)
+        # Stop active videos
         if self.activeVideo is not None:
-            print "Video Already in Progress!"
-            pprint.pprint(self.activeVideo)
-            print "Killing Active Video!"
+            # Try to start the video again once the active video has stopped
+            self.activeVideo.firedOnRaspividReaping.addBoth(self.callback_startVideo, params=vidParams)
             self.stopVideo()
-            # Wait a second to allow camera resources to become available
-            reactor.callLater(1, self.startVideo, params)
             return
-        # Send command
-        sendVideoCommand(vidParams)
-        # Write to log
+        # Videos supercede timelapses
+        fireToResumeTL = self.suspendActiveTimelapse() # None if no active timelapse
+        # Log the video command
         self.logger.writeToLog(formatLogString('startVid', 'timestamp', vidParams['dateTime']))
-        # Store start time
-        vidParams['startTime'] = dt.datetime.now()
-        # Stop the video at the end of its duration
-        vidParams['deferredStop'] = reactor.callLater(vidParams['duration']/1000, self.stopVideo)
-        # Store vid parameters
-        self.activeVideo = Video(vidParams)
-
-    def startTimelapse(self, params):
-        # Update Parameters
-        tlParams = mergeDicts(self.defaultTLParams, params)
-        # Check for and stop existing timelapses
-        if self.activeTimelapse is not None:
-            self.stopTimelapse()
-        # Throw out a queued timelapse if another one is to be started
-        if self.deferredTimelapse is not None:
-            self.deferredTimelapse.cancelDeferredStart()
-            self.deferredTimelapse = None
-        # Create the timelapse
-        timelapse = Timelapse(tlParams)
-        # Check for existing video
-        if self.activeVideo is not None:
-            # if a video is running, start the timelapse when it finishes
-            vidTimeRemaining = self.activeVideo.secondsRemaining()
-            if vidTimeRemaining > 0:
-                self.suspendTimelapse(timelapse, vidTimeRemaining + 1)
-                return
-            else:
-                self.stopVideo()
-        # Start timelapse
-        timelapse.start()
-        # Write to log
-        self.logger.writeToLog(formatLogString('startTL','intervalLen',timelapse['interval'],'timestamp',timelapse['dateTime']))
-        # Store start time
-        timelapse['startTime'] = dt.datetime.now()
-        # Update activeTimelapse
-        self.activeTimelapse = timelapse
+        # Handle video creation
+        self._initiateVideo(vidParams, susTl=fireToResumeTL)
 
     def stopVideo(self):
         if self.activeVideo is not None:
-            try:
-                self.activeVideo['deferredStop'].cancel()
-            except AssertionError, e:
-                print e
-            self.activeVideo = None
-        # Kill video processes
-        sp.Popen('killall raspivid', shell=True)
-        # Log
-        self.logger.writeToLog("stopVid")
+            self._terminateActiveVideo()
+        self.logger.writeToLog('stopVid')
 
-        # Restart deferred timelapses
-        if self.deferredTimelapse is not None:
-            self.restartSuspendedTimelapse()
-
-    def suspendTimelapse(self, timelapse, delay):
-        # Stop the active timelapse
+    def suspendActiveTimelapse(self):
         if self.activeTimelapse is not None:
-            self.stopTimelapse()
-        # Overwrite current deferredTimelapse
-        if self.deferredTimelapse is not None:
-            self.deferredTimelapse.cancelDeferredStart()
-        # Kill queued starts and stops
-        timelapse.cancelDeferredStart()
-        timelapse.cancelDeferredStop()
-        # Schedule Timelapse
-        self.deferredTimelapse = timelapse
-        self.deferredTimelapse.queue(delay)
+            tl, self.activeTimelapse = self.activeTimelapse, None
+            tl.stop()
+            d = defer.Deferred()
+            d.addCallback(tl.start)
+            return d
+        else:
+            return None
 
-    def restartSuspendedTimelapse(self):
-        # Return if there isn't a deferred timelapse
-        if self.deferredTimelapse is None:
+    def startTimelapse(self, params={}):
+        tlParams = self.overwriteTimelapseDefaults(params)
+        # If a video is playing, start timelapse when the video ends
+        if self.activeVideo is not None:
+            self.activeVideo.firedOnRaspividReaping.addBoth(self.callback_startTimelapse, tlParams)
             return
-        # Stop ongoing timelapse
+        # If a timelapse is active, stop it
         if self.activeTimelapse is not None:
-            self.stopTimelapse()
-        # Queue the timelapse (give the camera hardware time to free up)
-        self.deferredTimelapse.queue(1) ### TODO: Return a deferred
-        # rerefrence deferredTimelapse as activeTimelapse
-        self.activeTimelapse, self.deferredTimelapse = self.deferredTimelapse, None
+            self._terminateActiveTimelapse()
+        # Log the timelapse start
+        self.logger.writeToLog(formatLogString('startTL','intervalLen',tlParams['interval'],'timestamp',tlParams['dateTime']))
+        self._initiateTimelapse(tlParams)
 
     def stopTimelapse(self):
-        if self.activeTimelapse is not None:
-            self.activeTimelapse.stop()
-            self.activeTimelapse = None
-        # Log
+        self._terminateActiveTimelapse()
         self.logger.writeToLog('stopTL')
+
+    def overwriteVideoDefaults(self, params):
+        return mergeDicts(self.defaultVideoParams, params)
+
+    def overwriteTimelapseDefaults(self, params):
+        return mergeDicts(self.defaultTLParams, params)
+
+    def _initiateTimelapse(self, params):
+        tl = Timelapse(params)
+        tl.start()
+        self.activeTimelapse = tl
+
+    def _terminateActiveTimelapse(self):
+        if self.activeTimelapse is not None:
+            tl, self.activeTimelapse = self.activeTimelapse, None
+            tl.stop()
+
+    def _initiateVideo(self, params, susTl=None):
+        if params['stream']:
+            v = Stream(params)
+        else:
+            v = Video(params)
+        v.start()
+        v.firedOnRaspividReaping.addCallback(self._derefActiveVideo)
+        if susTl is not None:
+            v.firedOnRaspividReaping.chainDeferred(susTl)
+        self.activeVideo = v
+
+    def _terminateActiveVideo(self, *args):
+        self.activeVideo.stop()
+        # Not all videos are stopped in this fashion, so dereferencing should
+        #  be handled elsewhere
+
+    def _derefActiveVideo(self, *args):
+        if self.activeVideo is not None:
+            self.activeVideo = None
+
+    def callback_startVideo(self, result, params):
+        self.startVideo(params)
+
+    def callback_startTimelapse(self, result, params):
+        self.startTimelapse(params)
 
 
 class CameraState(dict):
@@ -214,100 +194,63 @@ class CameraState(dict):
         r = e - dt.datetime.now()
         return r.total_seconds()
 
+class Video(CameraState):
+    firedOnRaspividReaping = None
+    rpvProtocol = None
+
+    def start(self, *args):
+        self.rpvProtocol = rpvI.RaspiVidProtocol(vidParams=self)
+        d = self.rpvProtocol.startRecording()
+        self.firedOnRaspividReaping = d
+
+    def stop(self, *args):
+        self.rpvProtocol.stopRecording()
+
+
+class Stream(Video):
+    # Same factory for each Stream
+    streamingFactory = rpvI.VideoStreamingFactory()
+
+    def start(self, *args):
+        d = self.streamingFactory.initiateStreaming(self.copy()) #eww.. the streamingFactory references this arg.  Shouldn't pass self.
+        self.firedOnRaspividReaping = d
+
+    def stop(self, *args):
+        self.streamingFactory.stopStreaming()
+
 class Timelapse(CameraState):
 
     camera = None
     
-    def start(self):
+    def start(self, *args):
         # Instantiate a new camera
-        self.initializeCamera()
-        # Remove queued starts or stops
-        self.cancelDeferredStart()
+        self._initializeCamera()
         # Start a Looping call of raspistills
-        self['loopingCall'] = LoopingCall(self.captureImage)
+        self['loopingCall'] = LoopingCall(self._captureImage)
         self['loopingCall'].start(self['interval']/1000)
-        # Schedule an ending
-        from twisted.internet import reactor
-        self['deferredStop'] = reactor.callLater(self['duration'], self.stop)
 
-    def stop(self):
-        # Cancel the deferredStop if it's running
-        self.cancelDeferredStop()
-        # Stop the Timelapse
-        self.stopLoopingCall()
-        # Cancel deferredStart -- until Camera.restartSuspendedTimelapse returns a deferred
-        self.cancelDeferredStart()
-        # Close the camera
+    def stop(self, *args):
+        self._stopLoopingCall()
         self.camera.close()
 
-    def suspend(self):
-        pass
-
-    def queue(self, delay):
-        # queues a timelapse to be started after delay
-        # stop timelapse, and cancel all callLaters
-        self.stop()
-        from twisted.internet import reactor
-        self['deferredStart'] = reactor.callLater(delay, self.start)
-
-    def stopLoopingCall(self):
+    def _stopLoopingCall(self):
         if 'loopingCall' in self:
             if self['loopingCall'].running:
                 self['loopingCall'].stop()
 
-    def cancelDeferredStop(self):
-        if 'deferredStop' in self:
-            if self['deferredStop'].active():
-                self['deferredStop'].cancel()
-            del self['deferredStop']
-
-    def cancelDeferredStart(self):
-        if 'deferredStart' in self:
-            if self['deferredStart'].active():
-                self['deferredStart'].cancel()
-            del self['deferredStart']
-
-    def initializeCamera(self):
+    def _initializeCamera(self):
         self.camera = picamera.PiCamera()
         self.camera.color_effects= (128, 128) # Grayscale
         self.camera.exif_tags['ImageUniqueID'] = "{}_{}".format(socket.gethostname(), self['dateTime'])
 
-    def captureImage(self):
-        filename = "~/timelapse/{cageName}_{dateTime}_%05d.jpg" % self.getNextImageNumber()
+    def _captureImage(self):
+        filename = "~/timelapse/{cageName}_{dateTime}_%05d.jpg" % self._getNextImageNumber()
         filename = filename.format(**self)
         filename = os.path.expanduser(filename)
         self.camera.capture(filename, resize=(self['width'],self['height']), quality=self['jpegQuality'])
 
-    def getNextImageNumber(self):
+    def _getNextImageNumber(self):
         if not 'picNo' in self:
             self['picNo'] = 0
         self['picNo'] += 1
         return self['picNo']
-
-class Video(CameraState):
-    pass
-
-def sendVideoCommand(p):
-    # Generate Command String
-    # Append on outputs based on params
-    commandString = "raspivid -t {duration} -fps 30 -cfx 128:128 " \
-        "-b {bitrate} -w {width} -h {height}"
-    if p['stream']:
-        commandString += " -o - |"
-        if p['outputPath'] is not None:
-            commandString += " tee {outputPath} |"
-        commandString += " nc {streamTo} {streamPort}"
-    elif p['outputPath'] is not None:
-        commandString += " -o {outputPath}.h264"
-
-    if p['outputPath'] is not None:
-        commandString += "; (MP4Box -add {outputPath}.h264 {outputPath}.mp4 -fps 30 &&" \
-                    "rm {outputPath}.h264)"
-
-    commandString = commandString.format(**p)
-    print commandString
-    # Send off the start command
-    sp.Popen(commandString, shell=True)
-
-def raspikill():
-    sp.Popen('killall raspivid', shell=True)

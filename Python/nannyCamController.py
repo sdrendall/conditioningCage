@@ -5,7 +5,6 @@
 """
 Control script for nanny cams.
 Modeled after the CageController.py script
-Connects to a master server, enables a passive timelapse and live video streaming
 """
 
 import sys, re, time, datetime, os
@@ -15,12 +14,16 @@ import subprocess as sp
 
 from twisted.internet import reactor, protocol
 from twisted.protocols import basic
-from twisted.internet.serialport import SerialPort
+
+from Camera import cameraControls
+
+ccServer = "10.117.33.13"
+betty = '10.200.0.42'
 
 # IP Addresses to search for server and to stream video to respectively
-IP_ADDR = "10.117.33.13" # ccServer is 10.117.33.13
+IP_ADDR = ccServer # ccServer is 10.117.33.13
 IP_PORT = 1025
-IP_ADDR_VIDEO = "10.117.33.13" # ccServer is 10.117.33.13
+IP_ADDR_VIDEO = IP_ADDR # ccServer is 10.117.33.13
 IP_PORT_VIDEO = 5001
 
 # Determine IP address of controller
@@ -49,74 +52,20 @@ except:
 print("My IP: " + MY_IP)
 sys.stdout.flush()
 
-
-# ------ Camera Class ---- To handle camera actions -------------------
-class rasPiCam(object):
-    
-    # Initialize defaults for timelapse and video calls
-    # TODO: Allow for timelapse to run for an unbounded length of time
-    # EDITED DEFAULTS FOR DRY RUN!!
-    def __init__(self):
-        self.timelapseParams = {
-        'interval': 10*60*1000,
-        'duration': 7*24*60*60*1000,
-        'cageName': socket.gethostname(),
-        'width': 854,
-        'height': 480}
-        self.videoParams = {
-        'duration': 60000,
-        'targetIP': IP_ADDR_VIDEO,
-        'targetPort': IP_PORT_VIDEO}
-        self.state = "inactive"
-        
-    def startVideo(self):
-        if self.state == "timelapse":
-            # Stop current timelapse
-            self.stopTimelapse()
-            ## ALLOW FOR KILL COMMAND TO RESOLVE -- FIX THIS SOON
-            time.sleep(3)
-            # Queue next timelapse 
-            from twisted.internet import reactor
-            reactor.callLater(self.videoParams['duration'] + 10000, self.startTimelapse)
-        # Start Video
-        commandString = "raspivid -vf -t {duration} -fps 30 -cfx 128:128 " \
-                    "-b 3000000 -w 1280 -h 740 -o - | nc {targetIP} {targetPort}"
-        commandString = commandString.format(**self.videoParams)
-        sp.Popen(commandString, shell=True)
-        # Change state
-        self.state = "video"
-        # Log Video stream start -- Inaccurate!!
-        logEvent("startVid")
-    
-    # Fcn to start a timelapse -- delay arg is in milliseconds
-    def startTimelapse(self):
-        # Get date and time, for naming purposes
-        dt = datetime.datetime.now()
-        self.timelapseParams['dateTime'] = \
-            "{:04}{:02}{:02}_{:02}{:02}".\
-            format(dt.year, dt.month, dt.day, dt.hour, dt.minute)
-        # Construct raspistill call from input parameters
-        commandString = "raspistill -vf -q 50 -w {width} -h {height} " \
-            "-t {duration} -tl {interval} "\
-            "-o ~/timelapse/{cageName}_{dateTime}_%05d.jpg;"
-        commandString = commandString.format(**self.timelapseParams)
-        # Open timelapse subprocess
-        sp.Popen(commandString, shell=True)
-        # Change state
-        self.state = "timelapse"
-        # Log start time
-        # TODO: Fix logging w/ delay
-        logEvent("startTL intervalLen {}".format(self.timelapseParams['interval']))
-    def stopTimelapse(self):
-        # end timelapse
-        sp.Popen("killall raspistill", shell=True)
-        # Change state
-        self.state = "inactive"
-        # Log time
-        logEvent("stopTL")
+defaultTimelapseParams = {
+    'interval': 10*60*1000,
+    'duration': 7*24*60*60*1000,
+    'cageName': socket.gethostname(),
+    'width': 854,
+    'height': 480}
+defaultVideoParams = {
+    'duration': 0,
+    'stream': True,
+    'streamTo': IP_ADDR_VIDEO,
+    'streamPort': IP_PORT_VIDEO}
 
 # Initialize Camera
-piCam = rasPiCam()
+camera = cameraControls.Camera()
 
 # ---- Main Client Class to Handle Communication w/ server ----
 # Not sure what this does yet
@@ -174,15 +123,15 @@ class nannyCamControlClient(basic.LineReceiver):
             
             if command == "V":
             # stream video
-                piCam.startVideo()
+                camera.startVideo(defaultVideoParams)
             
             elif command == "T":
             # start timelapse
-                piCam.startTimelapse()
+                camera.startTimelapse(defaultTimelapseParams)
             
             elif command == "E":
             # end timelapse
-                piCam.stopTimelapse()
+                camera.stopTimelapse()
             
         def connectionLost(self, reason):
             print "connection lost"
@@ -260,7 +209,7 @@ def main():
     reactor.connectTCP(IP_ADDR, IP_PORT, f)
 
     openNewLogFile()
-    piCam.startTimelapse()
+    camera.startTimelapse(defaultTimelapseParams)
 
     reactor.run()
 
