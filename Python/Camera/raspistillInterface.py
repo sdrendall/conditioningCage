@@ -38,7 +38,8 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
         self.fireWhenProcessEnds = []
 
     def outReceived(self, data):
-        # Write incoming data to the next file in the timelapse seri
+        print 'received %d bytes!' % len(data)
+        # Decide where to write the data, depending on where SOI is
         self._parseData(data)
 
     def errReceived(self, data):
@@ -46,7 +47,9 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
         print data
 
     def processEnded(self, status):
+        # Fire off deferreds and close the last image file
         self.fireFireWhenProcessEndsDeferreds()
+        self._closeCurrImageFile()
 
     def fireFireWhenProcessEndsDeferreds(self):
         # Fire all deferreds in fireWhenProcessEnds
@@ -115,12 +118,13 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
     def _generateNextImageFileName(self):
         filename = "~/timelapse/{cageName}_{dateTime}_%05d.jpg" % self._getNextImageNumber()
         filename = filename.format(**self.tlParams)
+        print 'writing to %s' % filename
         return os.path.expanduser(filename)
 
     def _getNextImageNumber(self):
         self._currImageNumber += 1
         return self._currImageNumber
-        
+
 
 def main():
     from twisted.internet import reactor
