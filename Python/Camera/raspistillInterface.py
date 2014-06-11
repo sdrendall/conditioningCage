@@ -118,13 +118,13 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
         ind = data.find(eoi)
         if ind >= 0:
             # add to buffer
-            self._imageBuffer += data[:ind]
+            self._imageBuffer += data[:ind + len(eoi)]
             print 'Found EOF!'
             print '%d bytes received since last EOI' % len(self._imageBuffer)
             print 'writing to file...'
             self.writeToNextImageFile(self._imageBuffer)
             # reset buffer
-            self._imageBuffer = data[ind:]
+            self._imageBuffer = data[ind + len(eoi):]
         else:
             self._imageBuffer += data
 
