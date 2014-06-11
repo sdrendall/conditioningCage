@@ -133,9 +133,7 @@ def main():
     p = {'interval': 1000}
     tlProc = RaspiStillTimelapseProtocol(p)
     reactor.callWhenRunning(tlProc.startTimelapse)
-    reactor.callWhenRunning(reactor.callLater, 5, tlProc.stopTimelapse)
-    reactor.callWhenRunning(reactor.callLater, 8, tlProc.startTimelapse)
-    reactor.callWhenRunning(reactor.callLater, 12, tlProc.stopTimelapse)
+    reactor.callWhenRunning(reactor.callLater, 25, tlProc.stopTimelapse)
     reactor.run()
 
 if __name__ == '__main__':
