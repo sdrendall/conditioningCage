@@ -28,6 +28,7 @@ start_of_image = soi = '\xff\xd8\xff\xe1'
 class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
     _currImageNumber = 0
     _currImageFile = None
+    _fireToRenameCurrFile = None
 
     def __init__(self, tlParams={}):
         tlParams = mergeDicts(defaults, tlParams)
@@ -104,6 +105,7 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
             self._closeCurrImageFile
         f = open(self._generateNextImageFileName(), 'w')
         self._currImageFile = f
+        self._queueRenameFromTempName()
 
     def _writeToNextImageFile(self, data):
         f = self._openNextImageFile()
@@ -116,16 +118,31 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
     def _closeCurrImageFile(self):
         f, self._currImageFile = self._currImageFile, None
         f.close()
+        self._fireDeferredRename(f.name)
 
     def _generateNextImageFileName(self):
         filename = "~/timelapse/{cageName}_{dateTime}_%05d.jpg" % self._getNextImageNumber()
         filename = filename.format(**self.tlParams)
-        print 'writing to %s' % filename
-        return os.path.expanduser(filename)
+        # Append a ~ to denote an incomplete file
+        return os.path.expanduser(filename) + '~'
 
     def _getNextImageNumber(self):
         self._currImageNumber += 1
         return self._currImageNumber
+
+    def _queueRenameFromTempName(self):
+        d = defer.Deferred()
+        d.addCallback(self._renameFromTempName)
+        self._fireToRenameCurrFile = d
+        return d
+
+    def _renameFromTempName(self, currName):
+        args = ['mv', currName, currName[:-1]]
+        sp.Popen(args)
+
+    def _fireDeferredRename(self, currName):
+        d, self._fireToRenameCurrFile = self._fireToRenameCurrFile, None
+        d.callback(currName)
 
 
 def main():
