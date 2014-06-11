@@ -138,8 +138,8 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
             bytesInBuffer = len(self._imageBuffer)
             print '%d bytes received since last SOI' % bytesInBuffer
             if bytesInBuffer > 0:
-            print 'writing to file...'
-            self.writeToNextImageFile(self._imageBuffer)
+                print 'writing to file...'
+                self.writeToNextImageFile(self._imageBuffer)
             # reset buffer
             self._imageBuffer = data[ind:]
         else:
