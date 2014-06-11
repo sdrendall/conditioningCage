@@ -113,7 +113,7 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
         self._currImageNumber += 1
         return self._currImageNumber
 
-    def _detectEOI(data):
+    def _detectEOI(self, data):
         # Find EOI
         ind = data.find(eoi)
         if ind >= 0:
