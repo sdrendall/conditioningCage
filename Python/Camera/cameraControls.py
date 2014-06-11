@@ -101,7 +101,7 @@ class Camera(object):
         # Stop active videos
         if self.activeVideo is not None:
             # Try to start the video again once the active video has stopped
-            self.activeVideo.firedOnRaspividReaping.addBoth(self.callback_startVideo, params=vidParams)
+            self.activeVideo.firedOnRaspicamRelease.addBoth(self.callback_startVideo, params=vidParams)
             self.stopVideo()
             return
         # Videos supercede timelapses
@@ -130,7 +130,7 @@ class Camera(object):
         tlParams = self.overwriteTimelapseDefaults(params)
         # If a video is playing, start timelapse when the video ends
         if self.activeVideo is not None:
-            self.activeVideo.firedOnRaspividReaping.addBoth(self.callback_startTimelapse, tlParams)
+            self.activeVideo.firedOnRaspicamRelease.addBoth(self.callback_startTimelapse, tlParams)
             return
         # If a timelapse is active, stop it
         if self.activeTimelapse is not None:
@@ -165,9 +165,9 @@ class Camera(object):
         else:
             v = Video(params)
         v.start()
-        v.firedOnRaspividReaping.addCallback(self._derefActiveVideo)
+        v.firedOnRaspicamRelease.addCallback(self._derefActiveVideo)
         if susTl is not None:
-            v.firedOnRaspividReaping.chainDeferred(susTl)
+            v.firedOnRaspicamRelease.chainDeferred(susTl)
         self.activeVideo = v
 
     def _terminateActiveVideo(self, *args):
@@ -187,6 +187,7 @@ class Camera(object):
 
 
 class CameraState(dict):
+    firedOnRaspicamRelease = None
 
     def secondsRemaining(self):
         d = dt.timedelta(milliseconds=self['duration'])
@@ -195,13 +196,12 @@ class CameraState(dict):
         return r.total_seconds()
 
 class Video(CameraState):
-    firedOnRaspividReaping = None
     rpvProtocol = None
 
     def start(self, *args):
         self.rpvProtocol = rpvI.RaspiVidProtocol(vidParams=self)
         d = self.rpvProtocol.startRecording()
-        self.firedOnRaspividReaping = d
+        self.firedOnRaspicamRelease = d
 
     def stop(self, *args):
         self.rpvProtocol.stopRecording()
@@ -213,7 +213,7 @@ class Stream(Video):
 
     def start(self, *args):
         d = self.streamingFactory.initiateStreaming(self.copy()) #eww.. the streamingFactory references this arg.  Shouldn't pass self.
-        self.firedOnRaspividReaping = d
+        self.firedOnRaspicamRelease = d
 
     def stop(self, *args):
         self.streamingFactory.stopStreaming()

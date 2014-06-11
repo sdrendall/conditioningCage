@@ -130,7 +130,6 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
 
 def main():
     from twisted.internet import reactor
-    p = {'interval': 1000}
     tlProc = RaspiStillTimelapseProtocol(p)
     reactor.callWhenRunning(tlProc.startTimelapse)
     reactor.callWhenRunning(reactor.callLater, 25, tlProc.stopTimelapse)
