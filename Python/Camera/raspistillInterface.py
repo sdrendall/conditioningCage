@@ -38,9 +38,8 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
         self.fireWhenProcessEnds = []
 
     def outReceived(self, data):
-        print 'received %d bytes!' % len(data)
-        # Decide where to write the data, depending on where SOI is
-        self._parseData(data)
+        # Decide where to write the data
+        self._handleData(data)
 
     def errReceived(self, data):
         print '[err] raspistill:'
@@ -70,13 +69,11 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
 
     def startTimelapse(self):
         from twisted.internet import reactor
-        print 'starting timelapse!'
         reactor.spawnProcess(self, '/usr/bin/raspistill', args=self.tlArgs, env=os.environ)
         return self.deferUntilProcessEnds()
 
     # Call with maybeDeferred
     def stopTimelapse(self):
-        print 'stopping timelapse!'
         try:
             self.transport.signalProcess('KILL')
         except error.ProcessExitedAlready:
@@ -87,9 +84,12 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
         tlArgString = 'raspistill --timelapse {interval} -t {duration} -w {width} -h {height} -q {jpegQuality} -o -'.format(**params)
         self.tlArgs = tlArgString.split()
 
-    def _parseData(self, data):
+    def _handleData(self, data):
+        # Check incoming data for a jpeg start of file
         containsSOI, ind = self._detectSOI(data)
         if containsSOI:
+            # Write data before soi to the current file,
+            #  and data after soi to the next file
             self._writeToCurrImageFile(data[:ind])
             self._writeToNextImageFile(data[ind:])
         else:
