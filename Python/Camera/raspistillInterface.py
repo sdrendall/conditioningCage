@@ -1,4 +1,4 @@
-from twisted.internet import protocol, fdesc, error, defer, threads
+from twisted.internet import protocol, error, defer
 import datetime as dt
 import os, socket
 
@@ -23,26 +23,23 @@ defaults = {
     'jpegQuality': 50
 }
 
-end_of_image = eoi = '\xff\xd9'
 start_of_image = soi = '\xff\xd8\xff\xe1'
 
 class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
     _currImageNumber = 0
-    _imageBuffer = ''
+    _currImageFile = None
 
     def __init__(self, tlParams={}):
         tlParams = mergeDicts(defaults, tlParams)
         # Set the arguments to call raspistill with
-        self.setTlArgs(tlParams)
+        self._setTlArgs(tlParams)
         self.tlParams = tlParams
         # Empty list for deffereds fired on raspistill reaping
         self.fireWhenProcessEnds = []
 
     def outReceived(self, data):
         # Write incoming data to the next file in the timelapse seri
-        #self.writeToNextImageFile(data)
-        print 'Received %d bytes!' % len(data)
-        self._detectSOI(data)
+        self._parseData(data)
 
     def errReceived(self, data):
         print '[err] raspistill:'
@@ -51,10 +48,6 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
     def processEnded(self, status):
         self.fireFireWhenProcessEndsDeferreds()
 
-    def setTlArgs(self, params):
-        tlArgString = 'raspistill --timelapse {interval} -t {duration} -w {width} -h {height} -q {jpegQuality} -o -'.format(**params)
-        self.tlArgs = tlArgString.split()
-
     def fireFireWhenProcessEndsDeferreds(self):
         # Fire all deferreds in fireWhenProcessEnds
         while self.fireWhenProcessEnds:
@@ -62,7 +55,7 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
             try:
                 d.callback(None)
             # This will eventually be called when
-            #  the parent factory's currentProcessDeferred 
+            #  the parent factory's currProcessDeferred 
             #  is cancelled
             except defer.AlreadyCalledError:
                 pass
@@ -85,24 +78,38 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
             return
         return self.deferUntilProcessEnds()
 
-    def writeToNextImageFile(self, data):
-        f = self._openNextImageFile()
-        d = self._writeToImageFile(f, data)
-        d.addCallback(self._closeImageFile, f)
-        # Errback to write err to log?
+    def _setTlArgs(self, params):
+        tlArgString = 'raspistill --timelapse {interval} -t {duration} -w {width} -h {height} -q {jpegQuality} -o -'.format(**params)
+        self.tlArgs = tlArgString.split()
 
+    def _parseData(self, data):
+        containsSOI, ind = self._detectSOI(data)
+        if containsSOI:
+            self._writeToCurrImageFile(data[:ind])
+            self._writeToNextImageFile(data[ind:])
+        else:
+            self._writeToCurrImageFile(data)
+
+    def _detectSOI(self, data):
+        ind = data.find(soi)
+        return ind >= 0 , ind
+        
     def _openNextImageFile(self):
+        if self._currImageFile is not None:
+            self._closeCurrImageFile
         f = open(self._generateNextImageFileName(), 'w')
-        fdesc.setNonBlocking(f.fileno())
-        return f
+        self._currImageFile = f
 
-    def _writeToImageFile(self, f, data):
-        fd = f.fileno()
-        return threads.deferToThread(fdesc.writeToFD, fd, data)
+    def _writeToNextImageFile(self, data):
+        f = self._openNextImageFile()
+        self._writeToCurrImageFile(data)
 
-    def _closeImageFile(self, bytes, f):
-        # Called with the results of fdesc.writeToFD
-        print "Wrote {} bytes to {}!".format(bytes, f.name)
+    def _writeToCurrImageFile(self, data):
+        if self._currImageFile is not None:
+            self._currImageFile.write(data)
+
+    def _closeCurrImageFile(self):
+        f, self._currImageFile = self._currImageFile, None
         f.close()
 
     def _generateNextImageFileName(self):
@@ -113,40 +120,7 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
     def _getNextImageNumber(self):
         self._currImageNumber += 1
         return self._currImageNumber
-
-    def _detectEOI(self, data):
-        # Find EOI
-        ind = data.find(eoi)
-        if ind >= 0:
-            # add to buffer
-            self._imageBuffer += data[:ind + len(eoi)]
-            print 'Found EOF!'
-            print '%d bytes received since last EOI' % len(self._imageBuffer)
-            print 'writing to file...'
-            self.writeToNextImageFile(self._imageBuffer)
-            # reset buffer
-            self._imageBuffer = data[ind + len(eoi):]
-        else:
-            self._imageBuffer += data
-
-    def _detectSOI(self, data):
-        ind = data.find(soi)
-        if ind >= 0:
-            # add to buffer
-            self._imageBuffer += data[:ind]
-            print 'Found SOI!'
-            bytesInBuffer = len(self._imageBuffer)
-            print '%d bytes received since last SOI' % bytesInBuffer
-            if bytesInBuffer > 0:
-                print 'writing to file...'
-                self.writeToNextImageFile(self._imageBuffer)
-            # reset buffer
-            self._imageBuffer = data[ind:]
-        else:
-            self._imageBuffer += data
-
-
-
+        
 
 def main():
     from twisted.internet import reactor
