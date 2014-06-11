@@ -11,7 +11,7 @@ def mergeDicts(d1, d2):
     d = d1.copy()
     for key, value in d2.iteritems():
         d[key] = value
-    return d
+    return d    
 
 defaults = {
     'interval': 10*1000,
@@ -22,6 +22,12 @@ defaults = {
     'dateTime': generateTimestamp(),
     'jpegQuality': 50
 }
+end_of_image = eoi = '\xff\xd9'
+
+def detectEOI(data):
+    ind = data.find(eoi)
+    if ind >= 0:
+        print 'Found EOF at data[{}]'.format(ind)
 
 class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
     _currImageNumber = 0
