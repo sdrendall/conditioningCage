@@ -70,11 +70,13 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
 
     def startTimelapse(self):
         from twisted.internet import reactor
+        print 'starting timelapse!'
         reactor.spawnProcess(self, '/usr/bin/raspistill', args=self.tlArgs, env=os.environ)
         return self.deferUntilProcessEnds()
 
     # Call with maybeDeferred
     def stopTimelapse(self):
+        print 'stopping timelapse!'
         try:
             self.transport.signalProcess('KILL')
         except error.ProcessExitedAlready:
