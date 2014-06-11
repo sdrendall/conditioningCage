@@ -24,7 +24,7 @@ defaults = {
 }
 
 end_of_image = eoi = '\xff\xd9'
-start_of_image = soi = '\xff\xd8\xff\xe0'
+start_of_image = soi = '\xff\xd8\xff\xe1'
 
 class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
     _currImageNumber = 0
