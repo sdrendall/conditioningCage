@@ -24,6 +24,7 @@ defaults = {
 }
 
 end_of_image = eoi = '\xff\xd9'
+start_of_image = soi = '\xff\xd8\xff\xe0'
 
 class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
     _currImageNumber = 0
@@ -127,6 +128,24 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
             self._imageBuffer = data[ind + len(eoi):]
         else:
             self._imageBuffer += data
+
+    def _detectSOI(self, data):
+        ind = data.find(soi)
+        if ind >= 0:
+            # add to buffer
+            self._imageBuffer += data[:ind]
+            print 'Found SOI!'
+            bytesInBuffer = len(self._imageBuffer)
+            print '%d bytes received since last SOI' % bytesInBuffer
+            if bytesInBuffer > 0
+            print 'writing to file...'
+            self.writeToNextImageFile(self._imageBuffer)
+            # reset buffer
+            self._imageBuffer = data[ind:]
+        else:
+            self._imageBuffer += data
+
+
 
 
 def main():
