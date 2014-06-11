@@ -22,15 +22,12 @@ defaults = {
     'dateTime': generateTimestamp(),
     'jpegQuality': 50
 }
-end_of_image = eoi = '\xff\xd9'
 
-def detectEOI(data):
-    ind = data.find(eoi)
-    if ind >= 0:
-        print 'Found EOF at data[{}]'.format(ind)
+end_of_image = eoi = '\xff\xd9'
 
 class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
     _currImageNumber = 0
+    _bytesSinceEOI = 0
 
     def __init__(self, tlParams={}):
         tlParams = mergeDicts(defaults, tlParams)
@@ -44,7 +41,7 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
         # Write incoming data to the next file in the timelapse seri
         #self.writeToNextImageFile(data)
         print 'Received %d bytes!' % len(data)
-        detectEOI(data)
+        self._detectEOI(data)
 
     def errReceived(self, data):
         print '[err] raspistill:'
@@ -115,6 +112,20 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
     def _getNextImageNumber(self):
         self._currImageNumber += 1
         return self._currImageNumber
+
+    def _detectEOI(data):
+        # Find EOI
+        ind = data.find(eoi)
+        if ind >= 0:
+            # add the rest of the bytes
+            self._bytesSinceEOI += len(data[:ind])
+            print 'Found EOF!'
+            print '%d bytes received since last EOI' % self._bytesSinceEOI
+            # reset byte count
+            self._bytesSinceEOI = len(data[ind:])
+        else:
+            self._bytesSinceEOI += len(data)
+
 
 def main():
     from twisted.internet import reactor
