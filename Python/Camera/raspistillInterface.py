@@ -42,7 +42,9 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
 
     def outReceived(self, data):
         # Write incoming data to the next file in the timelapse seri
-        self.writeToNextImageFile(data)
+        #self.writeToNextImageFile(data)
+        print 'Received %d bytes!' % len(data)
+        detectEOI(data)
 
     def errReceived(self, data):
         print '[err] raspistill:'
