@@ -132,7 +132,6 @@ def main():
     from twisted.internet import reactor
     tlProc = RaspiStillTimelapseProtocol()
     reactor.callWhenRunning(tlProc.startTimelapse)
-    reactor.callWhenRunning(reactor.callLater, 25, tlProc.stopTimelapse)
     reactor.run()
 
 if __name__ == '__main__':
