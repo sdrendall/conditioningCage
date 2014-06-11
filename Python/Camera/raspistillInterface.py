@@ -130,6 +130,7 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
         return self._currImageNumber
 
     def _renameFromTempName(self, currName):
+        print 'renaming %s' % currName
         args = ['mv', currName, currName[:-1]]
         sp.Popen(args)
 
