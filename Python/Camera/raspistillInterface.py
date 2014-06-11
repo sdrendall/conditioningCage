@@ -96,12 +96,12 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
 
     def _closeImageFile(self, bytes, f):
         # Called with the results of fdesc.writeToFD
-        print "Wrote %d bytes to %r!" % bytes, f.name
+        print "Wrote {} bytes to {}!".format(bytes, f.name)
         f.close()
 
     def _generateNextImageFileName(self):
         filename = "~/timelapse/{cageName}_{dateTime}_%05d.jpg" % self._getNextImageNumber()
-        filename = filename.format(**self)
+        filename = filename.format(**self.tlParams)
         return os.path.expanduser(filename)
 
     def _getNextImageNumber(self):
