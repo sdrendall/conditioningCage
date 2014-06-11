@@ -1,5 +1,17 @@
-from twisted.internet import protocols, fdesc, error, defer, threads
-import os
+from twisted.internet import protocol, fdesc, error, defer, threads
+import datetime as dt
+import os, socket
+
+def generateTimestamp():
+    now = dt.datetime.now()
+    return "{:04}{:02}{:02}_{:02}{:02}".format(
+        now.year, now.month, now.day, now.hour, now.minute)
+
+def mergeDicts(d1, d2):
+    d = d1.copy()
+    for key, value in d2.iteritems():
+        d[key] = value
+    return d
 
 defaults = {
     'interval': 10*1000,
@@ -10,12 +22,6 @@ defaults = {
     'dateTime': generateTimestamp(),
     'jpegQuality': 50
 }
-
-def mergeDicts(d1, d2):
-    d = d1.copy()
-    for key, value in d2.iteritems():
-        d[key] = value
-    return d
 
 class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
     _currImageNumber = 0
