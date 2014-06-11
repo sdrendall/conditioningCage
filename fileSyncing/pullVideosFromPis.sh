@@ -14,14 +14,14 @@ do
     hn=$(ssh pi@$pi 'echo $HOSTNAME')
     vidDest="/media/HMSGenetics/GrayLab/SamRendall/conditioningCage/videoArchive/$hn"
     ensureDir $vidDest
-    rsync -avz --remove-source-files pi@$pi:~/fc_videos/ $vidDest
+    sudo rsync -avz --remove-source-files pi@$pi:~/fc_videos/ $vidDest
 done
 }
 
 # Make sure filesystem is mounted
 if [ ! -d "/media/HMSGenetics/GrayLab/SamRendall" ]
     then
-    sudo mount /media/HMSGenetics/GrayLab/SamRendall
+    sudo mount /media/HMSGenetics/GrayLab/
 fi
 
 syncVideos
