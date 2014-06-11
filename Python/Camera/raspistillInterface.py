@@ -27,7 +27,7 @@ end_of_image = eoi = '\xff\xd9'
 
 class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
     _currImageNumber = 0
-    _bytesSinceEOI = 0
+    _imageBuffer = ''
 
     def __init__(self, tlParams={}):
         tlParams = mergeDicts(defaults, tlParams)
@@ -117,14 +117,16 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
         # Find EOI
         ind = data.find(eoi)
         if ind >= 0:
-            # add the rest of the bytes
-            self._bytesSinceEOI += len(data[:ind])
+            # add to buffer
+            self._imageBuffer += data[:ind]
             print 'Found EOF!'
-            print '%d bytes received since last EOI' % self._bytesSinceEOI
-            # reset byte count
-            self._bytesSinceEOI = len(data[ind:])
+            print '%d bytes received since last EOI' % len(self._imageBuffer)
+            print 'writing to file...'
+            self.writeToNextImageFile(self._imageBuffer)
+            # reset buffer
+            self._imageBuffer = data[ind:]
         else:
-            self._bytesSinceEOI += len(data)
+            self._imageBuffer += data
 
 
 def main():
