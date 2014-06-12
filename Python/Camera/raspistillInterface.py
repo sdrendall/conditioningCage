@@ -102,7 +102,7 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
         
     def _openNextImageFile(self):
         if self._currImageFile is not None:
-            self._closeCurrImageFile
+            self._closeCurrImageFile()
         f = open(self._generateNextImageFileName(), 'w')
         self._currImageFile = f
 
