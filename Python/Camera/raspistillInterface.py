@@ -77,7 +77,9 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
     def stopTimelapse(self):
         try:
             self.transport.signalProcess('KILL')
-        except error.ProcessExitedAlready, exceptions.AttributeError:
+        except error.ProcessExitedAlready:
+            return
+        except exceptions.AttributeError:
             return
         return self.deferUntilProcessEnds()
 

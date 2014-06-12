@@ -89,7 +89,9 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
     def stopRecording(self):
         try:
             self.transport.signalProcess('KILL')
-        except error.ProcessExitedAlready, exceptions.AttributeError:
+        except error.ProcessExitedAlready:
+            return
+        except exceptions.AttributeError:
             return
         return self.deferUntilProcessEnds()
 
