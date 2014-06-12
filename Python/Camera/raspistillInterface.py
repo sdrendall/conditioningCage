@@ -117,9 +117,10 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
             self._currImageFile.write(data)
 
     def _closeCurrImageFile(self):
-        f, self._currImageFile = self._currImageFile, None
-        f.close()
-        self._renameFromTempName(f.name)
+        if self._currImageFile is not None:
+            f, self._currImageFile = self._currImageFile, None
+            f.close()
+            self._renameFromTempName(f.name)
 
     def _generateNextImageFileName(self):
         filename = "~/timelapse/{cageName}_{dateTime}_%05d.jpg" % self._getNextImageNumber()
