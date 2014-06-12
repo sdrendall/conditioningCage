@@ -116,7 +116,6 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
 
     def _closeCurrImageFile(self):
         f, self._currImageFile = self._currImageFile, None
-        print 'closing %s' % f.name
         f.close()
         self._renameFromTempName(f.name)
 
@@ -131,7 +130,6 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
         return self._currImageNumber
 
     def _renameFromTempName(self, currName):
-        print 'renaming %s' % currName
         args = ['mv', currName, currName[:-1]]
         sp.Popen(args)
 
