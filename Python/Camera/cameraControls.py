@@ -109,7 +109,9 @@ class Camera(object):
         if self.activeTimelapse is not None:
             atl = self.activeTimelapse # A race condition is created here.  Reference the active timelapse beforehand to prevent madness
             fireToResumeTL = self.suspendActiveTimelapse() # None if no active timelapse
+            # Try to start the video again after the active timelapse has released the raspicam
             atl.firedOnRaspicamRelease.addBoth(self.callback_startVideo, params=vidParams, susTl=fireToResumeTL)
+            return
         # Log the video command
         self.logger.writeToLog(formatLogString('startVid', 'timestamp', vidParams['dateTime']))
         # Handle video creation
