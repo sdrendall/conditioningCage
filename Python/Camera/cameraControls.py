@@ -1,6 +1,7 @@
 # Controls for the raspberry pi camera
 import subprocess as sp
 import raspividInterface as rpvI
+import raspistillIntervace as rpsI
 import sys, re, time, os, socket, pprint, picamera
 import datetime as dt
 from twisted.internet.task import LoopingCall
@@ -96,16 +97,19 @@ class Camera(object):
         else:
             self.logger = Logger()
 
-    def startVideo(self, params={}):
+    def startVideo(self, params={}, fireToResumeTL=None):
         vidParams = self.overwriteVideoDefaults(params)
         # Stop active videos
         if self.activeVideo is not None:
-            # Try to start the video again once the active video has stopped
+            # Try to start the new video again, using the same params, once the active video has stopped
             self.activeVideo.firedOnRaspicamRelease.addBoth(self.callback_startVideo, params=vidParams)
             self.stopVideo()
             return
         # Videos supercede timelapses
-        fireToResumeTL = self.suspendActiveTimelapse() # None if no active timelapse
+        if self.activeTimelapse is not None:
+            atl = self.activeTimelapse # A race condition is created here.  Reference the active timelapse beforehand to prevent madness
+            fireToResumeTL = self.suspendActiveTimelapse() # None if no active timelapse
+            atl.firedOnRaspicamRelease.addBoth(self.callback_startVideo, params=vidParams, susTl=fireToResumeTL)
         # Log the video command
         self.logger.writeToLog(formatLogString('startVid', 'timestamp', vidParams['dateTime']))
         # Handle video creation
@@ -152,6 +156,7 @@ class Camera(object):
     def _initiateTimelapse(self, params):
         tl = Timelapse(params)
         tl.start()
+        tl.firedOnRaspicamRelease.addBoth(self._derefActiveTimelapse)
         self.activeTimelapse = tl
 
     def _terminateActiveTimelapse(self):
@@ -165,6 +170,7 @@ class Camera(object):
         else:
             v = Video(params)
         v.start()
+        # Set active Video to None when raspivid is reaped
         v.firedOnRaspicamRelease.addCallback(self._derefActiveVideo)
         if susTl is not None:
             v.firedOnRaspicamRelease.chainDeferred(susTl)
@@ -179,10 +185,14 @@ class Camera(object):
         if self.activeVideo is not None:
             self.activeVideo = None
 
-    def callback_startVideo(self, result, params):
+    def _derefActiveTimelapse(self, *args):
+        if. self.activeTimelapse is not None:
+            self.activeTimelapse = None
+
+    def callback_startVideo(self, result, params={}, susTl=None):
         self.startVideo(params)
 
-    def callback_startTimelapse(self, result, params):
+    def callback_startTimelapse(self, result, params={}):
         self.startTimelapse(params)
 
 
@@ -219,38 +229,13 @@ class Stream(Video):
         self.streamingFactory.stopStreaming()
 
 class Timelapse(CameraState):
-
-    camera = None
+    rpsProtocol = None
     
     def start(self, *args):
-        # Instantiate a new camera
-        self._initializeCamera()
-        # Start a Looping call of raspistills
-        self['loopingCall'] = LoopingCall(self._captureImage)
-        self['loopingCall'].start(self['interval']/1000)
+        if self.rpsProtocol is None:
+            self.rpsProtocol = rpsI.RaspiStillTimelapseProtocol(tlParams=self)
+        d = self.rpsProtocol.startTimelapse()
+        self.firedOnRaspicamRelease = d
 
     def stop(self, *args):
-        self._stopLoopingCall()
-        self.camera.close()
-
-    def _stopLoopingCall(self):
-        if 'loopingCall' in self:
-            if self['loopingCall'].running:
-                self['loopingCall'].stop()
-
-    def _initializeCamera(self):
-        self.camera = picamera.PiCamera()
-        self.camera.color_effects= (128, 128) # Grayscale
-        self.camera.exif_tags['ImageUniqueID'] = "{}_{}".format(socket.gethostname(), self['dateTime'])
-
-    def _captureImage(self):
-        filename = "~/timelapse/{cageName}_{dateTime}_%05d.jpg" % self._getNextImageNumber()
-        filename = filename.format(**self)
-        filename = os.path.expanduser(filename)
-        self.camera.capture(filename, resize=(self['width'],self['height']), quality=self['jpegQuality'])
-
-    def _getNextImageNumber(self):
-        if not 'picNo' in self:
-            self['picNo'] = 0
-        self['picNo'] += 1
-        return self['picNo']
+        self.rpsProtocol.stopTimelapse()
