@@ -19,9 +19,10 @@ from twisted.application import service, internet
 
 ccServer = "10.117.33.13"
 anima = "10.200.0.39"
+betty = "10.200.0.42"
 
 # IP Addresses to search for server and to stream video to respectively
-IP_ADDR = ccServer
+IP_ADDR = betty
 IP_PORT = 1025
 IP_ADDR_VIDEO = IP_ADDR
 IP_PORT_VIDEO = 5001
