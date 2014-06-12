@@ -199,7 +199,7 @@ class Camera(object):
 
     def callback_resumeTimelapse(self, result, tl):
         tl.start()
-        tl.firedOnRaspicamRelease..addBoth(self,_derefActiveTimelapse)
+        tl.firedOnRaspicamRelease.addBoth(self._derefActiveTimelapse)
         self.activeTimelapse = tl
 
 
