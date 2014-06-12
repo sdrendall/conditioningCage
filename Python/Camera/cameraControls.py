@@ -127,7 +127,7 @@ class Camera(object):
             tl, self.activeTimelapse = self.activeTimelapse, None
             tl.stop()
             d = defer.Deferred()
-            d.addCallback(tl.start)
+            d.addCallback(self.callback_resumeTimelapse, tl)
             return d
         else:
             return None
@@ -196,6 +196,11 @@ class Camera(object):
 
     def callback_startTimelapse(self, result, params={}):
         self.startTimelapse(params)
+
+    def callback_resumeTimelapse(self, result, tl):
+        tl.start()
+        tl.firedOnRaspicamRelease..addBoth(self,_derefActiveTimelapse)
+        self.activeTimelapse = tl
 
 
 class CameraState(dict):
