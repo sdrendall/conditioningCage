@@ -186,7 +186,7 @@ class Camera(object):
             self.activeVideo = None
 
     def _derefActiveTimelapse(self, *args):
-        if. self.activeTimelapse is not None:
+        if self.activeTimelapse is not None:
             self.activeTimelapse = None
 
     def callback_startVideo(self, result, params={}, susTl=None):
