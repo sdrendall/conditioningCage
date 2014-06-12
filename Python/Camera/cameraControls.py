@@ -192,7 +192,7 @@ class Camera(object):
             self.activeTimelapse = None
 
     def callback_startVideo(self, result, params={}, susTl=None):
-        self.startVideo(params)
+        self.startVideo(params, susTl)
 
     def callback_startTimelapse(self, result, params={}):
         self.startTimelapse(params)
