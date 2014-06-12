@@ -1,7 +1,7 @@
 from twisted.internet import protocol, error, defer
 import subprocess as sp
 import datetime as dt
-import os, socket
+import os, socket, exceptions
 
 def generateTimestamp():
     now = dt.datetime.now()
@@ -64,7 +64,7 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
                 pass
 
     def deferUntilProcessEnds(self):
-        d = defer.Deferred()
+        d = defer.Deferred()q
         self.fireWhenProcessEnds.append(d)
         return d
 

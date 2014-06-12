@@ -1,6 +1,6 @@
 from twisted.internet import protocol, fdesc, error
 from twisted.protocols import basic
-import os
+import os, platform
 
 class MplayerProtocol(protocol.ProcessProtocol):
 
@@ -10,7 +10,8 @@ class MplayerProtocol(protocol.ProcessProtocol):
 
     def openMplayer(self):
         from twisted.internet import reactor
-        reactor.spawnProcess(self, '/opt/local/bin/mplayer', args=self.mpArgs, env=os.environ)
+        exe = self._getMplayerPath()
+        reactor.spawnProcess(self, exe, args=self.mpArgs, env=os.environ)
 
     def writeToMplayer(self, data):
         #print "writing to mplayer...."
@@ -36,6 +37,12 @@ class MplayerProtocol(protocol.ProcessProtocol):
     def outReceived(self, data):
         print '[stdout] mplayer:'
         print data
+
+    def _getMplayerPath(self):
+        if platform.system() == 'Darwin':
+            return '/opt/local/bin/mplayer'
+        else:
+            return '/usr/bin/mplayer'
 
 
 class VideoReceivingProtocol(basic.LineReceiver):

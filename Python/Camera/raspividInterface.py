@@ -11,7 +11,7 @@
 
 from twisted.internet import protocol, fdesc, error, defer
 from twisted.protocols import basic
-import os, subprocess
+import os, subprocess, exceptions
 
 defaults = {
             'duration': 0,
@@ -89,7 +89,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
     def stopRecording(self):
         try:
             self.transport.signalProcess('KILL')
-        except error.ProcessExitedAlready:
+        except error.ProcessExitedAlready, exceptions.AttributeError:
             return
         return self.deferUntilProcessEnds()
 
