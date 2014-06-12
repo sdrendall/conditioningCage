@@ -64,7 +64,7 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
                 pass
 
     def deferUntilProcessEnds(self):
-        d = defer.Deferred()q
+        d = defer.Deferred()
         self.fireWhenProcessEnds.append(d)
         return d
 
@@ -77,7 +77,7 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
     def stopTimelapse(self):
         try:
             self.transport.signalProcess('KILL')
-        except error.ProcessExitedAlready:
+        except error.ProcessExitedAlready, exceptions.AttributeError:
             return
         return self.deferUntilProcessEnds()
 
