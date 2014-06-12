@@ -1,9 +1,9 @@
 # Controls for the raspberry pi camera
+import datetime as dt
 import subprocess as sp
 import raspividInterface as rpvI
 import raspistillInterface as rpsI
-import sys, re, time, os, socket, pprint, picamera
-import datetime as dt
+import sys, os, socket, pprint
 from twisted.internet.task import LoopingCall
 from twisted.internet import defer
 
