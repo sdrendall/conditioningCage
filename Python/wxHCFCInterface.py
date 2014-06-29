@@ -249,7 +249,7 @@ class HCFHControllerWindow(wx.Panel):
 
     def endFCAllCages(self, e):
         """Cancel FC."""
-        self.server.stopFC()
+         self.server.stopFC()
 
     def endFCOneCage(self, e):
         """Cancel FC."""
@@ -260,7 +260,7 @@ class HCFHControllerWindow(wx.Panel):
             id = self.clientList.GetClientData(n)
             self.server.stopFC(id)
 
-    def runTimelapse(self, e):
+     def runTimelapse(self, e):
         self.server.startTimelapse()
 
     def runOneTimelapse(self, e):
@@ -309,7 +309,7 @@ class HCFHControllerWindow(wx.Panel):
             pName = pc.variableName
             pVal = pc.GetValue()
             if pName in {'tempPeriod', 'toneDuration', 'shockDuration'}:
-                pVal *=1000 # convert from sec to ms
+                pVal *= 1000 # convert from sec to ms
             if not pName.startswith("fcDelay"):
                 self.server.setParameter(pName, pVal, cageID)
         delaysArray = []

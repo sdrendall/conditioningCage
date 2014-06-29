@@ -139,6 +139,9 @@ class ConditioningControlClient(basic.LineReceiver):
                     'height': 480,
                     'bitrate': 1000000,
                     'dateTime': generateTimestamp(),
+                    "streamTo": IP_ADDR_VIDEO,
+                    "streamPort": IP_PORT_VIDEO,
+                    'stream': True
                 }
                 videoParams['outputPath'] =  savePath + "{cageName}_FC_{dateTime}".format(**videoParams)
 
