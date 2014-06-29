@@ -151,6 +151,9 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
             pass
         self.convertToMp4(path)
 
+    def _dereferenceStreamingProtocol(self):
+        self.streamingProtocol = None
+
 
 class VideoStreamingProtocol(basic.LineReceiver):
     rpiVidProtocol = None
@@ -171,7 +174,9 @@ class VideoStreamingProtocol(basic.LineReceiver):
         self.transport.write(data)
 
     def connectionLost(self, reason):
-        self.rpiVidProtocol.stopRecording()
+        if self.rpiVidProtocol.outputFile is not None:
+            self.rpiVidProtocol.stopRecording()
+        self.rpiVidProtocol._dereferenceStreamingProtocol()
 
     def startStreaming(self):
         # Open a raspivid process to begin streaming
@@ -192,7 +197,7 @@ class VideoStreamingFactory(protocol.ClientFactory):
     protocol = VideoStreamingProtocol
     vidParams = defaults
     _newProcessDeferred = None
-    _connectors = {}
+    _connectors = []
     _streamId = 0
 
     def initiateStreaming(self, params={}):
@@ -217,16 +222,15 @@ class VideoStreamingFactory(protocol.ClientFactory):
 
     def disconnectConnectors(self):
         # disconnect does nothing to disconnected connections
-        #  this also serves to clear the _connectors dict
-        for key in self._connectors.keys():
-            c = self._connectors.pop(key)
+        #  this also serves to clear the _connectors list
+        while self._connectors:
+            c = self._connectors.pop()
             c.disconnect()
 
     def connectToServer(self):
         from twisted.internet import reactor
         c = reactor.connectTCP(self.vidParams['streamTo'], self.vidParams['streamPort'], self)
-        self._connectors[self._streamId] = c
-        self._streamId += 1
+        self._connectors.append(c)
         return c
 
     def buildProtocol(self, addr):
