@@ -18,7 +18,6 @@ from twisted.internet.serialport import SerialPort
 from twisted.application import service, internet
 
 ccServer = "10.117.33.13"
-anima = "10.200.0.39"
 betty = "10.200.0.42"
 jesse = "10.200.0.40"
 
