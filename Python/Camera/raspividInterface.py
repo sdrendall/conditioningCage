@@ -174,7 +174,7 @@ class VideoStreamingProtocol(basic.LineReceiver):
         self.transport.write(data)
 
     def connectionLost(self, reason):
-        if self.rpiVidProtocol.outputFile is not None:
+        if self.rpiVidProtocol.outputFile is None:
             self.rpiVidProtocol.stopRecording()
         self.rpiVidProtocol._dereferenceStreamingProtocol()
 
