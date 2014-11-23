@@ -12,7 +12,7 @@ syncToServer() {
 
 syncVideos() {
         # Check if FS is mounted (should be a better way)
-    if [ -d "$geneticsFS/incomingTimelapses" ];
+    if [ -d "$geneticsFS/incomingVideos" ];
     then 
         # Check if target dir exists
         if [ -d "$VIDEO_DEST" ];
