@@ -53,7 +53,7 @@ print("My IP: " + MY_IP)
 sys.stdout.flush()
 
 defaultTimelapseParams = {
-    'interval': 10*60*1000,
+    'interval': .1*60*1000,
     'duration': 7*24*60*60*1000,
     'cageName': socket.gethostname(),
     'width': 854,
