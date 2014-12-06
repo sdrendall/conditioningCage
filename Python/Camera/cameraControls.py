@@ -121,7 +121,7 @@ class Camera(object):
         if self.activeVideo is not None:
             print "Terminating Active Video"
             self._terminateActiveVideo()
-        else 
+        else:
             print "stopVideo: No Active Video"
         self.logger.writeToLog('stopVid')
 
