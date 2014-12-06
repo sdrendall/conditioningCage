@@ -173,7 +173,7 @@ class Camera(object):
             v = Video(params)
         v.start()
         # Set active Video to None when raspivid is reaped
-        v.firedOnRaspicamRelease.addCallback(self)
+        v.firedOnRaspicamRelease.addCallback(self._derefActiveVideo)
         if susTl is not None:
             v.firedOnRaspicamRelease.chainDeferred(susTl)
         self.activeVideo = v
