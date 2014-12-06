@@ -200,6 +200,7 @@ class VideoStreamingProtocol(basic.LineReceiver):
 
 class VideoStreamingFactory(protocol.ClientFactory):
     protocol = VideoStreamingProtocol
+    currentRpvProtocol = None
     vidParams = defaults
     _newProcessDeferred = None
     _connectors = []
@@ -216,9 +217,9 @@ class VideoStreamingFactory(protocol.ClientFactory):
         self.connectToServer()
         return d
 
-    def stopStreaming(self):
-        # Alias, for more intuitive use
+    def stopRecording(self):
         self.disconnectConnectors()
+        self.stopAndDereferenceCurrentRpvProtocol()
 
     def createNewProcessDeferred(self):
         d = defer.Deferred()
@@ -245,7 +246,12 @@ class VideoStreamingFactory(protocol.ClientFactory):
         return p
 
     def buildRpvProtocol(self, vsp):
+        # If an old Rpv Protocol is referenced, it must be dereferenced
+        # If it comes to this, something is wrong
+        self.stopAndDereferenceCurrentRpvProtocol()
         p = RaspiVidProtocol(self.vidParams, vsp)
+        # Reference the new protocol
+        self.currentRpvProtocol = p
         # Dereference the _newProcessDeferred.  This should be the deferred created by the 
         #  most recent call to initiateStream
         d, self._newProcessDeferred = self._newProcessDeferred, None
@@ -255,6 +261,11 @@ class VideoStreamingFactory(protocol.ClientFactory):
         fireWhenProcessEnds = p.deferUntilProcessEnds()
         fireWhenProcessEnds.chainDeferred(d)
         return p
+
+    def stopAndDereferenceCurrentRpvProtocol(self):
+        if self.currentRpvProtocol is not None:
+            self.currentRpvProtocol.stopRecording()
+            self.currentRpvProtocol = None
 
 
 def main():

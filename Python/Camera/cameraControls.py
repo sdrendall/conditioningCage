@@ -119,7 +119,10 @@ class Camera(object):
 
     def stopVideo(self):
         if self.activeVideo is not None:
+            print "Terminating Active Video"
             self._terminateActiveVideo()
+        else 
+            print "stopVideo: No Active Video"
         self.logger.writeToLog('stopVid')
 
     def suspendActiveTimelapse(self):
@@ -235,7 +238,7 @@ class Stream(Video):
         self.firedOnRaspicamRelease = d
 
     def stop(self, *args):
-        self.streamingFactory.stopStreaming()
+        self.streamingFactory.stopRecording()
 
 class Timelapse(CameraState):
     rpsProtocol = None
