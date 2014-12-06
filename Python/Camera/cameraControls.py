@@ -173,7 +173,7 @@ class Camera(object):
             v = Video(params)
         v.start()
         # Set active Video to None when raspivid is reaped
-        v.firedOnRaspicamRelease.addCallback(self._derefActiveVideo)
+        v.firedOnRaspicamRelease.addCallback(self)
         if susTl is not None:
             v.firedOnRaspicamRelease.chainDeferred(susTl)
         self.activeVideo = v
@@ -184,10 +184,12 @@ class Camera(object):
         #  be handled elsewhere
 
     def _derefActiveVideo(self, *args):
+        print 'Dereferencing active video...'
         if self.activeVideo is not None:
             self.activeVideo = None
 
     def _derefActiveTimelapse(self, *args):
+        print 'Dereferencing active timelapse...'
         if self.activeTimelapse is not None:
             self.activeTimelapse = None
 

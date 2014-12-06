@@ -60,6 +60,7 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
         print data
 
     def processEnded(self, status):
+        print 'raspivid ended!'
         self.fireFireWhenProcessEndsDeferreds()
         self.closeOutputFile()
 
@@ -87,11 +88,14 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
 
     # Call with maybeDeferred
     def stopRecording(self):
+        print 'stopping recording...'
         try:
             self.transport.signalProcess('KILL')
         except error.ProcessExitedAlready:
+            print error.ProcessExitedAlready
             return
         except exceptions.AttributeError:
+            print exceptions.AttributeError
             return
         return self.deferUntilProcessEnds()
 
@@ -186,6 +190,7 @@ class VideoStreamingProtocol(basic.LineReceiver):
 
     def stopStreaming(self):
         # Kill the raspivid process then close the connection
+        print 'stopping stream...'
         d = maybeDeferred(self.rpiVidProtocol.stopRecording)
         d.addCallback(self.disconnect)
         return d
