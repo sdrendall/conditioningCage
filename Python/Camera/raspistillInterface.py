@@ -21,7 +21,9 @@ defaults = {
     'width': 854,
     'height': 480,
     'dateTime': generateTimestamp(),
-    'jpegQuality': 50
+    'jpegQuality': 50,
+    'vFlip': False,
+    'hFlip': False
 }
 
 start_of_image = soi = '\xff\xd8\xff\xe1'
@@ -85,6 +87,8 @@ class RaspiStillTimelapseProtocol(protocol.ProcessProtocol):
 
     def _setTlArgs(self, params):
         tlArgString = 'raspistill --timelapse {interval} -t {duration} -w {width} -h {height} -q {jpegQuality} -o -'.format(**params)
+        if params['vFlip']: tlArgString += ' --vflip'
+        if params['hFlip']: tlArgString += ' --hflip'
         self.tlArgs = tlArgString.split()
 
     def _handleData(self, data):

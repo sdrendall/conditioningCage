@@ -57,7 +57,9 @@ defaultTimelapseParams = {
     'duration': 7*24*60*60*1000,
     'cageName': socket.gethostname(),
     'width': 854,
-    'height': 480}
+    'height': 480,
+    'vFlip': True
+    }
 defaultVideoParams = {
     'duration': 0,
     'stream': True,

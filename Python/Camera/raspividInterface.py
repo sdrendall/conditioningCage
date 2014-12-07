@@ -21,7 +21,9 @@ defaults = {
             'height': 740,
             'fps': 30,
             'bitrate': 3000000,
-            'outputPath': None
+            'outputPath': None,
+            'vFlip': False,
+            'hFlip': False
     }
 
 def echo(line):
@@ -103,6 +105,8 @@ class RaspiVidProtocol(protocol.ProcessProtocol):
         # Create a list of args from params
         vidArgString = 'raspivid -fps {fps} -cfx 128:128 -b {bitrate} -w {width} -h {height} -t {duration} -o -'
         vidArgString = vidArgString.format(**params)
+        if params['vFlip']: tlArgString += ' --vflip'
+        if params['hFlip']: tlArgString += ' --hflip'
         self.vidArgs = vidArgString.split()
 
     def streamData(self, data):
