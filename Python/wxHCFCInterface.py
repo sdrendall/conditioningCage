@@ -249,7 +249,7 @@ class HCFHControllerWindow(wx.Panel):
 
     def endFCAllCages(self, e):
         """Cancel FC."""
-         self.server.stopFC()
+        self.server.stopFC()
 
     def endFCOneCage(self, e):
         """Cancel FC."""
@@ -260,7 +260,7 @@ class HCFHControllerWindow(wx.Panel):
             id = self.clientList.GetClientData(n)
             self.server.stopFC(id)
 
-     def runTimelapse(self, e):
+    def runTimelapse(self, e):
         self.server.startTimelapse()
 
     def runOneTimelapse(self, e):
@@ -365,6 +365,7 @@ class HCFHControllerWindow(wx.Panel):
 
         if filePath!=None:
             try:
+                self.displayText('Loading Parameters from ' + filePath)
                 paramFile = open(filePath,'r')
                 newParamsDict = json.load(paramFile)
                 paramFile.close()
