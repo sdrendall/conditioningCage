@@ -40,3 +40,7 @@ mountFS() {
 unmountFS() {
     sudo umount /media/HMSGenetics/;
 }
+
+mountFS
+syncVideos
+unmountFS
