@@ -7,7 +7,8 @@ geneticsFS=/media/HMSGenetics
 VIDEO_DEST=$geneticsFS/incomingVideos/$HOSTNAME
 
 syncToServer() {
-    rsync -aqz --remove-source-files --log-file=$log ~/fc_videos/*.mp4 $VIDEO_DEST
+    # Requires root privledges
+    sudo rsync -aqz --remove-source-files --log-file=$log ~/fc_videos/*.mp4 $VIDEO_DEST
 }
 
 syncVideos() {
