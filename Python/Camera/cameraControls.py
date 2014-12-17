@@ -70,7 +70,7 @@ class Camera(object):
             'cageName': socket.gethostname(),
             'width': 854,
             'height': 480,
-            'dateTime': generateTimestamp(),
+            'dateTime': generateTimestamp(), # Overwritten when startTimelapse is called
             'jpegQuality': 50
     }
 
@@ -84,7 +84,7 @@ class Camera(object):
             'height': 740,
             'fps': 30,
             'bitrate': 3000000,
-            'dateTime': generateTimestamp(),
+            'dateTime': generateTimestamp(), # Overwritten when startTimelapse is called
             'outputPath': None
     }
 
@@ -99,6 +99,7 @@ class Camera(object):
 
     def startVideo(self, params={}, fireToResumeTL=None):
         vidParams = self.overwriteVideoDefaults(params)
+        vidParams['dateTime'] = generateTimestamp()
         # Stop active videos
         if self.activeVideo is not None:
             # Try to start the new video again, using the same params, once the active video has stopped
@@ -137,6 +138,7 @@ class Camera(object):
 
     def startTimelapse(self, params={}):
         tlParams = self.overwriteTimelapseDefaults(params)
+        tlParams['dateTime'] = generateTimestamp()
         # If a video is playing, start timelapse when the video ends
         if self.activeVideo is not None:
             self.activeVideo.firedOnRaspicamRelease.addBoth(self.callback_startTimelapse, tlParams)
