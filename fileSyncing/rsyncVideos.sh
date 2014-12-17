@@ -24,6 +24,7 @@ syncVideos() {
             sudo mkdir $VIDEO_DEST
             syncToServer
         fi
+    fi
 }
 
 mountFS() {
