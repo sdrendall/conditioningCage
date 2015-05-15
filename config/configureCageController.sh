@@ -15,11 +15,6 @@ pushd ~
 mkdir code logs timelapse
 popd
 
-# ADD SCRIPTS TO CLONE GIT REPO, UNPACK TO IMPORTANT PLACES!!!
-pushd ~/code
-git clone https://github.com/sdrendall/conditioningCage
-popd
-
 # Add runClient to /usr/bin
 pushd ~/code/conditioningCage/bashScripts
 for client in nannyCamClient cageClient;
@@ -40,15 +35,13 @@ echo "@reboot cageClient" >> ~/.crontab.curr
 crontab ~/.crontab.curr
 
 # Add rsa keys
-if [ ! -d "~/.ssh"]
+if [ ! -d "~/.ssh" ]
     then
     mkdir ~/.ssh
 fi
 cat pubRsaKey_sam >> ~/.ssh/authorized_keys
-cat pubRsaKey_hccws >> ~/.ssh/authorized_keys
+cat pubRsaKey_ccws >> ~/.ssh/authorized_keys
 popd
-
-# FIGURE OUT HOW TO ADD HMS MIRRORS FOR APTITUDE
 
 # Reboot
 sudo reboot

@@ -3,4 +3,3 @@
 timestamp=`date +%Y%m%d_%H%m`
 cd ~/code/conditioningCage/Python/
 twistd --no_save --reactor=select --nodaemon --python CageController.py
-	> ~/logs/clientOutput_$timestamp.txt
