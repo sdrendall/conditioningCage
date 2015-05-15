@@ -19,6 +19,10 @@ syncToMacOnly() {
     rsync -aqz --remove-source-files --log-file=$log ~/timelapse/*.jpg ccws@$macWorkstationIP:~/timelapses/$HOSTNAME
 }
 
+syncToServer() {
+    sudo rsync -aqz --remove-source-files --log-file=$log ~/timelapse/*.jpg $imageDest
+}
+
 # Automation of sync commands, check appropriate directories
 syncImages() {
     # Check if FS is mounted (should be a better way)
@@ -28,11 +32,11 @@ syncImages() {
         if [ -d "$imageDest" ];
         then
             # sync to mac first, delete after syncing to server
-            syncToMacThenServer
+            syncToServer
         else
             # make target directory if it isn't there
             sudo mkdir $imageDest
-            syncToMacThenServer
+            syncToServer
         fi
      # Only sync to the Mac if the server can't be reached
      else

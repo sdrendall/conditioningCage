@@ -1,6 +1,5 @@
 #! /bin/bash
 
-
 # Update
 sudo apt-get update && sudo apt-get -y upgrade 
 
@@ -26,7 +25,6 @@ popd
 
 # Set up fstab
 pushd ~/code/conditioningCage/config
-cat smbcredentials > ~/.smbcredentials
 echo "//research.files.med.harvard.edu/genetics/GrayLabPis /media/HMSGenetics cifs credentials=/home/pi/.smbcredentials,iocharset=utf8,sec=ntlm 0 0" | sudo tee --append /etc/fstab
 
 # Set up Cron
@@ -43,5 +41,4 @@ cat pubRsaKey_sam >> ~/.ssh/authorized_keys
 cat pubRsaKey_ccws >> ~/.ssh/authorized_keys
 popd
 
-# Reboot
-sudo reboot
+echo "Configuration Complete!  Please Reboot.  Ensure that .smbcredentials has been properly copied to the home folder"
