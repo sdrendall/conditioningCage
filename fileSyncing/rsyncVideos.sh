@@ -18,10 +18,8 @@ syncVideos() {
         # Check if target dir exists
         if [ -d "$VIDEO_DEST" ];
         then
-            # sync to mac first, delete after syncing to server
             syncToServer
         else
-            # make target directory if it isn't there
             sudo mkdir $VIDEO_DEST
             syncToServer
         fi

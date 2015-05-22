@@ -6,8 +6,8 @@ sudo apt-get update && sudo apt-get -y upgrade
 # Install dig, ntp and nmap
 sudo apt-get -y install dnsutils nmap ntp
  
-# Install python packages twisted picamera
-sudo apt-get -y install python-twisted python-picamera
+# Install packages for video and networking
+sudo apt-get -y install python-twisted python-picamera gpac
 
 # Add some directories that are used
 pushd ~
@@ -37,6 +37,7 @@ if [ ! -d "~/.ssh" ]
     then
     mkdir ~/.ssh
 fi
+
 cat pubRsaKey_sam >> ~/.ssh/authorized_keys
 cat pubRsaKey_ccws >> ~/.ssh/authorized_keys
 popd
